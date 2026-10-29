@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sopa Lodges — Weekly Leadership Performance Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16305C;
+    --red:#C41E3A;
+    --blue:#2C5AA0;
+    --green:#1E7A45;
+    --green-bg:#EAF5EE;
+    --neg-red:#B4222F;
+    --neg-bg:#FBEAEA;
+    --neutral-text:#8B887E;
+    --neutral-bg:#F1EFEA;
+    --bg:#F5F3EE;
+    --card:#FFFFFF;
+    --border:#E3E0D6;
+    --totals-tint:#F1EEE6;
+    --muted1:#6B6B6B;
+    --muted2:#9C988B;
+    --muted3:#8B887E;
+    --body-text:#1A1A1A;
+    --gridline:#EDEAE1;
+    --prior-line:#9AA5B4;
+    --budget-tint:#E9B2B8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--body-text);
+    font-family:'Public Sans', sans-serif;
+    font-size:13px;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.num,.eyebrow,.kpi-figure{font-family:'Manrope', sans-serif;}
+  a{color:var(--navy); text-decoration:none;}
+  a:hover{color:var(--red);}
+  .wrap{max-width:1400px; margin:0 auto; padding:28px 40px 60px;}
+
+  /* Header */
+  header{ background:var(--navy); padding:22px 40px; }
+  .header-inner{
+    max-width:1400px; margin:0 auto;
+    display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  }
+  .logo-lockup{display:flex; align-items:center; gap:14px;}
+  .logo-mark{
+    width:52px; height:52px; border-radius:10px;
+    background:#ffffff;
+    display:flex; align-items:center; justify-content:center;
+    padding:6px;
+    flex-shrink:0;
+  }
+  .logo-mark img{ width:100%; height:100%; object-fit:contain; display:block; }
+  .logo-text .eyebrow{
+    color:#B7C2D6; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; margin:0 0 2px;
+  }
+  .logo-text h1{color:#fff; font-size:18px; font-weight:800; margin:0 0 2px; letter-spacing:0.01em;}
+  .logo-text .scope{color:#AEB9CC; font-size:11px; font-weight:500;}
+
+  .header-right{display:flex; flex-direction:column; align-items:flex-end; gap:10px;}
+  .last-updated{color:#8B98B5; font-size:10.5px; font-weight:600; letter-spacing:0.02em;}
+  .last-updated b{color:#DCE2EE; font-weight:700;}
+  .toggles{display:flex; gap:22px; flex-wrap:wrap;}
+  .toggle-group{display:flex; flex-direction:column; align-items:flex-start; gap:5px;}
+  .toggle-group .tg-label{color:#8B98B5; font-size:9.5px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;}
+  .segmented{ display:flex; background:rgba(255,255,255,0.08); border-radius:999px; padding:3px; gap:2px; }
+  .segmented button{
+    border:none; background:transparent; color:#fff; font-family:'Public Sans',sans-serif;
+    font-size:11.5px; font-weight:600; padding:6px 14px; border-radius:999px; cursor:pointer;
+    letter-spacing:0.02em; transition:all .15s ease;
+  }
+  .segmented button.inactive{background:var(--blue); color:#fff;}
+  .segmented button.active{background:#fff; color:var(--navy);}
+
+  /* Cards */
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px 22px; }
+
+  /* KPI row */
+  .kpi-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; margin:26px 0 20px; }
+  .kpi-card{min-width:0;}
+  .kpi-card .eyebrow{
+    font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted1); font-weight:700; margin:0 0 8px;
+  }
+  .kpi-card .kpi-figure{ font-size:25px; font-weight:800; color:var(--navy); margin:0 0 14px; line-height:1.1; }
+  .kpi-compare{border-top:1px solid var(--gridline); padding-top:9px; margin-top:9px;}
+  .kpi-compare:first-of-type{border-top:none; padding-top:0; margin-top:0;}
+  .kpi-compare .row1{display:flex; justify-content:space-between; align-items:baseline; gap:6px;}
+  .kpi-compare .label{font-size:10.5px; color:var(--muted2); font-weight:600;}
+  .kpi-compare .pct{font-size:11.5px; font-weight:700;}
+  .kpi-compare .abs{font-size:10.5px; color:var(--muted2); margin-top:2px; font-weight:500;}
+  .pct.pos{color:var(--green);}
+  .pct.neg{color:var(--neg-red);}
+  .pct.na{color:var(--neutral-text);}
+  .chip{ display:inline-block; padding:1px 7px; border-radius:5px; font-weight:700; font-size:10.5px; }
+  .chip.pos{background:var(--green-bg); color:var(--green);}
+  .chip.neg{background:var(--neg-bg); color:var(--neg-red);}
+  .chip.na{background:var(--neutral-bg); color:var(--neutral-text);}
+
+  .property-card{margin:0 0 16px;}
+  .property-card h2{font-size:14px; font-weight:800; color:var(--navy); margin:0 0 2px;}
+  .mis-note{font-size:10.5px; color:var(--muted3); margin:6px 0 0; font-style:normal;}
+
+  /* Header dropdown controls (Period, Property) */
+  .dropdown-wrap{ position:relative; }
+  .dropdown-toggle{
+    display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,0.08); border:none;
+    border-radius:999px; padding:6px 14px; font-family:'Public Sans',sans-serif; font-size:11.5px; font-weight:600;
+    color:#fff; cursor:pointer; letter-spacing:0.02em; white-space:nowrap;
+  }
+  .dropdown-toggle:after{ content:'▾'; font-size:8px; color:#B7C2D6; }
+  .dropdown-toggle.open{ background:#fff; color:var(--navy); }
+  .dropdown-toggle.open:after{ color:var(--muted2); }
+  .dropdown-panel{
+    position:absolute; top:calc(100% + 8px); left:0; background:#fff; border:1px solid var(--border);
+    border-radius:10px; box-shadow:0 12px 28px rgba(22,48,92,0.28); padding:16px; width:300px; z-index:50;
+  }
+  .period-quick{display:flex; gap:8px; margin-bottom:12px;}
+  .period-quick button{
+    flex:1; border:1px solid var(--border); background:var(--bg); color:var(--navy); font-family:'Public Sans',sans-serif;
+    font-size:11.5px; font-weight:700; padding:7px 8px; border-radius:7px; cursor:pointer;
+  }
+  .period-quick button.active{background:var(--navy); border-color:var(--navy); color:#fff;}
+  .month-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px;}
+  .month-chip{
+    border:1px solid var(--border); background:#fff; color:var(--body-text); font-family:'Public Sans',sans-serif;
+    font-size:11.5px; font-weight:600; padding:7px 0; border-radius:6px; cursor:pointer; text-align:center;
+  }
+  .month-chip.selected{background:var(--navy); border-color:var(--navy); color:#fff;}
+  .period-actions{display:flex; justify-content:flex-end;}
+  .period-actions button{
+    border:none; background:var(--red); color:#fff; font-family:'Public Sans',sans-serif; font-weight:700;
+    font-size:11.5px; padding:7px 16px; border-radius:7px; cursor:pointer;
+  }
+  .property-list{display:flex; flex-direction:column; gap:3px; max-height:280px; overflow-y:auto;}
+  .property-list button{
+    text-align:left; border:1px solid transparent; background:transparent; color:var(--body-text);
+    font-family:'Public Sans',sans-serif; font-size:12px; font-weight:600; padding:8px 10px; border-radius:7px; cursor:pointer; width:100%;
+  }
+  .property-list button:hover{ background:var(--bg); }
+  .property-list button.selected{ background:var(--navy); color:#fff; }
+  .property-list .plist-country{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted2); font-weight:700; margin:8px 0 2px 10px; }
+
+  /* Main grid: chart 2 / side 1 */
+  .main-grid{display:grid; grid-template-columns:2fr 1fr; gap:16px; align-items:start;}
+  .left-col{display:flex; flex-direction:column; gap:16px; min-width:0;}
+  @media(max-width:980px){ .main-grid{grid-template-columns:1fr;} .kpi-row{grid-template-columns:repeat(2,1fr);} }
+
+  .chart-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:2px;}
+  .chart-card h2{font-size:14px; font-weight:800; color:var(--navy); margin:0 0 2px;}
+  .chart-sub{font-size:11px; color:var(--muted2); margin:0 0 14px;}
+  .metric-tabs{display:flex; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:3px; gap:2px;}
+  .metric-tabs button{
+    border:none; background:transparent; color:var(--muted1); font-family:'Public Sans',sans-serif;
+    font-size:11px; font-weight:700; padding:6px 12px; border-radius:6px; cursor:pointer;
+  }
+  .metric-tabs button.active{background:var(--navy); color:#fff;}
+
+  .readout{
+    background:#EFF3F9; border-radius:8px; padding:10px 14px; display:flex; gap:20px; align-items:baseline;
+    font-size:11.5px; margin-bottom:10px; flex-wrap:wrap; min-height:20px;
+  }
+  .readout .rmonth{font-weight:800; color:var(--navy); font-size:12.5px;}
+  .readout .ritem{display:flex; align-items:baseline; gap:5px;}
+  .readout .ritem b{color:var(--body-text);}
+  .readout .swatch{width:9px; height:9px; border-radius:2px; display:inline-block; flex-shrink:0;}
+  .readout .delta{font-size:10.5px; color:var(--muted2);}
+  .legend{display:flex; gap:18px; font-size:11px; color:var(--muted1); margin:10px 0 4px; flex-wrap:wrap;}
+  .legend .litem{display:flex; align-items:center; gap:6px;}
+  .legend .line{width:16px; height:0; border-top:2.5px solid; display:inline-block;}
+  .legend .line.dashed{border-top-style:dashed;}
+  .legend .sq{width:10px; height:10px; border-radius:2px; display:inline-block;}
+
+  .monthly-detail{margin-top:16px; padding-top:14px; border-top:1px solid var(--gridline);}
+  .md-head{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
+  .md-head h3{font-size:11.5px; font-weight:800; color:var(--navy); margin:0; text-transform:uppercase; letter-spacing:0.04em;}
+  .md-caption{font-size:10.5px; color:var(--muted2);}
+  .md-legend{display:flex; gap:12px; font-size:10px; color:var(--muted1);}
+  .md-legend span{display:flex; align-items:center; gap:4px;}
+  .md-row{display:flex; gap:5px; align-items:flex-end;}
+  .md-col{flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:4px 2px; border-radius:6px;}
+  .md-col:hover{background:var(--bg);}
+  .md-col.in-period{background:rgba(22,48,92,0.055);}
+  .md-col.active{background:#EFF3F9;}
+  .md-bars{display:flex; align-items:flex-end; gap:1.5px; height:40px; width:100%; justify-content:center;}
+  .md-bar{width:5px; border-radius:1px 1px 0 0;}
+  .md-bar.actual{background:var(--navy);}
+  .md-bar.budget{background:var(--red); opacity:0.55;}
+  .md-bar.prior{background:var(--prior-line);}
+  .md-month{font-size:9.5px; color:var(--muted1); font-weight:700; margin-top:2px;}
+  .md-value{font-size:9px; color:var(--body-text); font-weight:700; text-align:center; line-height:1.3;}
+  .md-var{font-size:8.5px; font-weight:700;}
+
+  /* Side panels */
+  .side-stack{display:flex; flex-direction:column; gap:16px;}
+  .side-card h3{font-size:12.5px; font-weight:800; color:var(--navy); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em;}
+  .side-sub{font-size:10.5px; color:var(--muted2); margin:0 0 14px;}
+  .lb-row{padding:9px 0; border-top:1px solid var(--gridline);}
+  .lb-row:first-of-type{border-top:none; padding-top:0;}
+  .lb-row.lb-selected{background:#EAF0FB; box-shadow:inset 3px 0 0 var(--navy); padding-left:8px; margin-left:-8px; padding-right:8px; margin-right:-8px; border-radius:6px;}
+  .lb-line1{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; gap:8px;}
+  .lb-rank{color:var(--muted2); font-weight:700; font-size:10.5px; margin-right:4px;}
+  .lb-name{font-weight:700; color:var(--body-text);}
+  .lb-value{font-weight:800; color:var(--navy); font-size:12.5px; white-space:nowrap;}
+  .lb-line2{display:flex; justify-content:flex-end; margin-top:4px;}
+
+  .split-metric{margin-bottom:16px;}
+  .split-metric:last-child{margin-bottom:0;}
+  .split-label{font-size:10.5px; font-weight:700; color:var(--muted1); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.03em;}
+  .split-bar-row{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .split-country{width:64px; font-size:10.5px; font-weight:700; color:var(--muted1); flex-shrink:0;}
+  .split-track{flex:1; background:var(--gridline); border-radius:4px; height:16px; position:relative; overflow:hidden;}
+  .split-fill{height:100%; border-radius:4px;}
+  .split-fill.ke{background:var(--navy);}
+  .split-fill.tz{background:var(--red);}
+  .split-value{width:72px; text-align:right; font-size:11px; font-weight:700; color:var(--body-text); flex-shrink:0;}
+
+  /* Month focus */
+  .mf-head{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;}
+  .mf-head h2{font-size:14px; font-weight:800; color:var(--navy); margin:0;}
+  .month-pills{display:flex; gap:4px; flex-wrap:wrap;}
+  .month-pills button{
+    border:1px solid var(--border); background:#fff; color:var(--muted1); font-size:11px; font-weight:600;
+    padding:6px 11px; border-radius:6px; cursor:pointer; font-family:'Public Sans',sans-serif;
+  }
+  .month-pills button.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+
+  table{width:100%; border-collapse:collapse;}
+  th{
+    text-align:right; font-size:10.5px; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted1);
+    font-weight:700; padding:10px; border-bottom:1px solid var(--border);
+  }
+  th:first-child, td:first-child{text-align:left;}
+  td{padding:10px; font-size:12px; text-align:right; border-bottom:1px solid #F1EFE9;}
+  tr.totals td{background:var(--totals-tint); font-weight:700;}
+  tr.row-selected td{background:#EAF0FB; box-shadow:inset 3px 0 0 var(--navy);}
+  .metric-name{font-weight:700; color:var(--body-text);}
+
+  .two-tables{display:grid; grid-template-columns:1fr; gap:20px; margin-top:14px;}
+  .table-card{overflow-x:auto;}
+  .table-card h3{font-size:11.5px; font-weight:800; color:var(--navy); margin:0 0 10px; text-transform:uppercase; letter-spacing:0.04em;}
+  .na-note{font-size:11px; color:var(--muted3); font-style:normal; padding:14px 0;}
+
+  footer{margin-top:30px; padding-top:16px; border-top:1px solid var(--border);}
+  footer p{font-size:10.5px; color:var(--muted3); line-height:1.6; margin:0 0 6px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-lockup">
+      <div class="logo-mark"><img src="data:image/png;base64,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" alt="Sopa Lodges"></div>
+      <div class="logo-text">
+        <p class="eyebrow">Sopa Lodges</p>
+        <h1>Weekly Leadership Performance Dashboard</h1>
+        <p class="scope" id="scopeLine">Sopa Lodges · Kenya and Tanzania · 2026 actual + forecast, against budget and 2025</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <p class="last-updated">Last updated: <b id="lastUpdated">29 Oct 2026</b></p>
+      <div class="toggles">
+      <div class="toggle-group">
+        <span class="tg-label">Year</span>
+        <div class="segmented" id="yearToggle">
+          <button data-val="2026">2026</button>
+          <button data-val="2025">2025</button>
+        </div>
+      </div>
+      <div class="toggle-group">
+        <span class="tg-label">Period</span>
+        <div class="dropdown-wrap" id="periodWrap">
+          <button class="dropdown-toggle" id="periodToggle"></button>
+          <div class="dropdown-panel" id="periodPanel" style="display:none;">
+            <div class="period-quick" id="periodQuick">
+              <button data-quick="ytd">YTD</button>
+              <button data-quick="full">Full Year</button>
+            </div>
+            <div class="month-grid" id="monthGrid"></div>
+            <div class="period-actions"><button id="periodDone">Done</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="toggle-group">
+        <span class="tg-label">View</span>
+        <div class="segmented" id="viewToggle">
+          <button data-val="af">A+F</button>
+          <button data-val="confirmed">Confirmed</button>
+        </div>
+      </div>
+      <div class="toggle-group">
+        <span class="tg-label">Property</span>
+        <div class="dropdown-wrap" id="propertyWrap">
+          <button class="dropdown-toggle" id="propertyToggle">All Properties</button>
+          <div class="dropdown-panel" id="propertyPanel" style="display:none;">
+            <div class="property-list" id="propertyList"></div>
+          </div>
+        </div>
+      </div>
+      <div class="toggle-group">
+        <span class="tg-label">Country</span>
+        <div class="segmented" id="countryToggle">
+          <button data-val="ALL">Group</button>
+          <button data-val="KE">Kenya</button>
+          <button data-val="TZ">Tanzania</button>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="card property-card">
+    <h2 id="propTitle">Performance by property</h2>
+    <p class="chart-sub" id="propSub">2026 actual + forecast against budget</p>
+    <p class="mis-note" id="misNote" style="display:none;">Figures for this period are sourced from the Sopa Kenya 2026 MIS workbook's monthly detail and may differ slightly from full-year totals due to timing differences between source sheets.</p>
+    <div style="overflow-x:auto;">
+      <table id="propertyTable"></table>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="left-col">
+      <div class="card chart-card">
+        <div class="chart-head">
+          <div>
+            <h2 id="chartTitle">Gross Room Revenue by month</h2>
+            <p class="chart-sub" id="chartSub">Navy is 2026 A+F, dashed red is budget, dashed grey is 2025 actual.</p>
+          </div>
+          <div class="metric-tabs" id="metricTabs">
+            <button data-metric="revenue">Revenue</button>
+            <button data-metric="occ">Occ</button>
+            <button data-metric="adr">ADR</button>
+            <button data-metric="rns">RNS</button>
+            <button data-metric="ebitda">EBITDA</button>
+          </div>
+        </div>
+        <div class="readout" id="readout"></div>
+        <svg id="trendChart" viewBox="0 0 760 220" style="width:100%; height:auto; overflow:visible;"></svg>
+        <div class="legend">
+          <span class="litem"><span class="line" style="border-color:#16305C;"></span><span id="legendActualLabel">2026 A+F</span></span>
+          <span class="litem"><span class="line dashed" style="border-color:#C41E3A;"></span>Budget</span>
+          <span class="litem"><span class="line dashed" style="border-color:#9AA5B4;"></span>2025 Actual</span>
+        </div>
+
+        <div class="monthly-detail">
+          <div class="md-head">
+            <div>
+              <h3>Monthly detail</h3>
+              <p class="md-caption">Click a month to open its full drill-down below.</p>
+            </div>
+            <div class="md-legend">
+              <span><span class="sq" style="background:#16305C;"></span><span id="mdLegendLabel">A+F</span></span>
+              <span><span class="sq" style="background:#C41E3A;opacity:.55;"></span>Budget</span>
+              <span><span class="sq" style="background:#9AA5B4;"></span>2025</span>
+            </div>
+          </div>
+          <div class="md-row" id="monthlyDetail"></div>
+        </div>
+      </div>
+
+      <div class="card monthfocus">
+        <div class="mf-head">
+          <h2>Month Focus</h2>
+          <div class="month-pills" id="monthPills"></div>
+        </div>
+        <div class="two-tables">
+          <div class="table-card">
+            <h3>Performance Detail</h3>
+            <table id="mfMainTable"></table>
+          </div>
+          <div class="table-card">
+            <h3>Booking Status (2026)</h3>
+            <div id="mfBookingWrap"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-stack">
+      <div class="card side-card">
+        <h3>Lodge leaderboard</h3>
+        <p class="side-sub" id="lbSub">Ranked by gross room revenue variance to budget</p>
+        <div id="leaderboard"></div>
+      </div>
+      <div class="card side-card">
+        <h3>Kenya / Tanzania split</h3>
+        <p class="side-sub" id="splitSub">2026 full year</p>
+        <div id="splits"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Room nights sold is derived as gross room revenue divided by ADR, computed month by month and then summed; small differences from other room-night figures in the source data are due to rounding.</p>
+    <p>EBITDA is measured against the same dedicated budget column in both years, and compared like any other metric.</p>
+    <p>2026 figures default to the actual-plus-forecast (A+F) view. All variance coloring follows one rule: green when favorable or at/above budget, red when unfavorable, grey where the comparison does not apply.</p>
+    <p>The View toggle (top right) switches 2026's headline Revenue, Occupancy, ADR, Room Nights Sold and RevPAR between A+F (blends confirmed bookings with the remaining months' forecast) and Confirmed (already-confirmed reservations only, excluding Budget and any still-provisional bookings). EBITDA, Extras Revenue and Total Gross Revenue have no Confirmed-only breakdown anywhere in the source data, so they're hidden from the KPI row, the property table, the Kenya/Tanzania split, Month Focus, and the trend chart's metric tabs whenever Confirmed view is active — switch back to A+F to see them. 2025 is a closed year with no forecast or provisional layer at all, so the toggle has no effect there.</p>
+  </footer>
+
+</div>
+
+<script>
+// ---------- DATA (from Weekly Leadership Dashboard MIS export) ----------
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const DATA = {
+  2026: {
+    KE: {
+      budgOcc:[61,77,54,54,54,87,90,93,87,81,57,60],
+      confOcc:[67,81,50,43,57,78,84,90,83,69,35,24],
+      provOcc:[0,0,0,0,0,0,0,0,0,0,4,7],
+      budgARR:[234,222,240,165,169,223,310,308,290,286,213,242],
+      confARR:[230,227,233,169,165,221,306,306,300,288,217,272],
+      provARR:[null,null,null,null,null,null,null,null,null,238,240,239],
+      budgRoomRev:[1710669,1835668,1556221,1029050,1099236,2239654,3325755,3447926,2908288,2773829,1404487,1748909],
+      confRoomRev:[1853051,1986497,1399300,850978,1134469,1993637,3079159,3290531,2878243,2383944,886052,793409],
+      provRoomRev:[0,0,0,0,0,0,0,0,0,3810,105775,191181],
+      budgRN:[7309,8264,6497,6241,6497,10060,10734,11181,10036,9715,6583,7233],
+      confRN:[8067,8733,6010,5025,6871,9016,10074,10762,9588,8291,4077,2913],
+      provRN:[0,0,0,0,0,0,0,0,0,16,440,799],
+      adr:[230,228,234,170,167,223,306,306,301,287,217,228],
+      occ:[67,81,50,43,58,79,86,92,85,71,49,57],
+      grr:[1854885,2001338,1405456,850459,1141279,2004230,3079675,3297364,2881234,2382329,1198403,1527664],
+      roomsAvail:[11966,10808,11966,11580,11718,11340,11718,11718,11340,11718,11340,11718],
+      ebitdaBudget:[467595,501763,280001,-54367,-69815,723164,1592234,1673178,1272409,1215188,171516,318656],
+      ebitdaActual:[634566,693396,292205,-100950,-29624,606609,1484370,1603434,1299933,904054,123075,252977],
+      grossTotalRevA:[2203743,2281145,1629075,1122221,1344071,2270779,3449924,3615173,3208524,2655115,1433315,1768631], grossTotalRevB:[2062642,2165057,1819427,1387421,1343428,2613154,3778915,3907581,3299138,3220733,1704607,2164744],
+      extrasRevA:[348858,279807,223619,271761,202792,266549,370249,317808,327290,272786,234912,240967], extrasRevB:[351973,329389,263206,358370,244192,373500,453160,459653,390849,446905,300120,415834],
+      annual:{budgOcc:71,confOcc:63,provOcc:1,budgARR:250,confARR:252,provARR:240,budgRoomRev:25079692,confRoomRev:22529270,provRoomRev:300766,budgRN:100350,confRN:89427,provRN:1255,adr:250,occ:68,grr:23624316,ebitdaBudget:8091521,ebitdaActual:7764045},
+      lodges:[
+        {name:'Amboseli Sopa Lodge', budgOcc:81,confOcc:70,provOcc:1,budgARR:199,confARR:202,provARR:220,budgRoomRev:4908632,confRoomRev:4348407,provRoomRev:58589,budgRN:24715,confRN:21567,provRN:266, adr:202,occ:74,grr:4623020,ebitdaBudget:2476673,ebitdaActual:2320124, roomsAvail:30660},
+        {name:'Lake Naivasha Sopa Resort', budgOcc:89,confOcc:77,provOcc:2,budgARR:314,confARR:318,provARR:247,budgRoomRev:8343747,confRoomRev:7284341,provRoomRev:137976,budgRN:26538,confRN:22910,provRN:558, adr:312,occ:86,grr:7505580,ebitdaBudget:5359004,ebitdaActual:4257776, roomsAvail:27970},
+        {name:'Lake Nakuru Sopa Lodge', budgOcc:74,confOcc:65,provOcc:1,budgARR:255,confARR:259,provARR:267,budgRoomRev:4121806,confRoomRev:3674800,provRoomRev:35819,budgRN:16157,confRN:14177,provRN:134, adr:258,occ:68,grr:3852825,ebitdaBudget:2131801,ebitdaActual:2060192, roomsAvail:21900},
+        {name:'Masai Mara Sopa Lodge', budgOcc:68,confOcc:62,provOcc:1,budgARR:250,confARR:253,provARR:243,budgRoomRev:6289051,confRoomRev:5818156,provRoomRev:52073,budgRN:25134,confRN:22996,provRN:214, adr:251,occ:66,grr:6128188,ebitdaBudget:2209818,ebitdaActual:2228010, roomsAvail:36865},
+        {name:'Samburu Sopa Lodge', budgOcc:36,confOcc:36,provOcc:0,budgARR:181,confARR:180,provARR:196,budgRoomRev:1416456,confRoomRev:1403566,provRoomRev:16309,budgRN:7806,confRN:7777,provRN:83, adr:180,occ:39,grr:1514703,ebitdaBudget:253308,ebitdaActual:293674, roomsAvail:21535}
+      ]
+    },
+    TZ: {
+      budgOcc:[34,46,22,13,28,47,84,82,59,74,26,33],
+      confOcc:[26,46,13,9,27,36,60,66,61,47,27,11],
+      provOcc:[0,0,0,0,0,0,0,0,0,0,1,1],
+      budgARR:[308,295,273,203,176,304,359,367,345,345,295,349],
+      confARR:[312,300,299,195,182,304,361,374,356,342,277,320],
+      provARR:[null,null,null,null,null,null,null,null,null,null,324,353],
+      budgRoomRev:[243045,286149,140262,59608,115576,322790,703320,701220,460043,597015,173776,270800],
+      confRoomRev:[185145,289758,91469,39330,114322,243774,504348,577644,492034,368958,167592,81023],
+      provRoomRev:[0,0,0,0,0,0,0,0,0,0,5179,7069],
+      budgRN:[789,971,514,293,658,1063,1957,1911,1334,1730,589,776],
+      confRN:[593,966,306,202,628,803,1397,1543,1381,1080,606,253],
+      provRN:[0,0,0,0,0,0,0,0,0,0,16,20],
+      adr:[318,300,299,195,182,304,361,375,356,346,284,340],
+      occ:[26,46,13,9,27,36,60,66,61,46,29,36],
+      grr:[188619,290033,91526,39429,114560,243916,503809,577903,491679,370664,187927,281145],
+      roomsAvail:[2325,2100,2325,2250,2325,2250,2325,2325,2250,2325,2250,2325],
+      ebitdaBudget:[77661,115958,-17500,-50928,-23170,120903,423590,416781,241368,347004,31024,80725],
+      ebitdaActual:[37392,128158,-19610,-56695,-8866,89989,295028,349001,296272,175877,50544,114282],
+      grossTotalRevA:[215634,325870,106062,47435,141040,283582,570301,640924,562872,422493,227115,290971], grossTotalRevB:[264081,322613,157913,74114,148326,373957,777900,769364,518791,679428,211323,302061],
+      extrasRevA:[27015,35837,14536,8006,26480,39666,66492,63021,71193,51829,39188,9826], extrasRevB:[21036,36464,17651,14506,32750,51167,74580,68144,58748,82413,37547,31261],
+      annual:{budgOcc:46,confOcc:36,provOcc:0,budgARR:324,confARR:323,provARR:340,budgRoomRev:4073603,confRoomRev:3155399,provRoomRev:12247,budgRN:12585,confRN:9758,provRN:36,adr:326,occ:38,grr:3381208,ebitdaBudget:1763415,ebitdaActual:1451372},
+      lodges:[
+        {name:'Tarangire Sopa Lodge', budgOcc:46,confOcc:36,provOcc:0,budgARR:324,confARR:323,provARR:340,budgRoomRev:4073603,confRoomRev:3155399,provRoomRev:12247,budgRN:12585,confRN:9758,provRN:36, adr:326,occ:38,grr:3381208,ebitdaBudget:1763415,ebitdaActual:1451372, roomsAvail:27375}
+      ]
+    },
+    group_annual:{budgOcc:67.1,confOcc:58.9,provOcc:0.8,budgARR:258,confARR:259,provARR:242,budgRoomRev:29153295,confRoomRev:25684669,provRoomRev:313013,budgRN:112935,confRN:99185,provRN:1291,adr:257,occ:63.1,grr:27005524,ebitdaBudget:9854936,ebitdaActual:9215417}
+  },
+  2025: {
+    KE: {
+      adr:[218,209,220,160,164,210,284,282,272,271,204,232],
+      occ:[56,71,50,48,50,83,88,93,85,78,53,57],
+      grr:[1475594,1617220,1309443,896258,978533,2035510,2989820,3135652,2668854,2516703,1250355,1572741],
+      ebitda:[434348,569309,149044,-19990,-31116,763143,1488534,1613042,1197779,1138847,154647,-6872],
+      budgetAdr:[198,211,200,170,160,205,270,277,263,262,198,219],
+      budgetOcc:[57,69,56,45,47,75,88,91,90,73,48,56],
+      budgetGrr:[1348939,1580046,1333294,896661,898616,1793324,2846475,3034945,2748263,2288668,1117091,1480506],
+      budgetEbitda:[283546,462334,325988,-22862,-74374,580490,1341200,1501927,1280495,967963,140885,264949],
+      // 2025A Gross Total Revenue / Extras Revenue — derived the same way the 2026 figures are:
+      // each entity's own "Gross Total Revenue" row (2025A group) from the Sopa Kenya 2026 MIS
+      // workbook's per-property Income Statement blocks, minus that same entity's exact 2025
+      // Room Revenue (the "Last Year Room Revenue" column in the workbook's monthly
+      // Rooms-Available/Sold/Revenue table, which is a direct 2025-actual figure, not modeled —
+      // confirmed to match this DATA object's own `grr` array exactly for every lodge and month).
+      // Cross-validated twice: (1) the five Kenya lodges' derived Extras sum to this Kenya-level
+      // Extras row within ≤2 (rounding) for every month, and (2) each lodge's Gross Total Revenue
+      // 2025A group sums to this Kenya-level row the same way. No 2025 Budget series exists for
+      // either metric anywhere in the source (the workbook is anchored on 2026 and only compares
+      // to 2025 Actual) — so there's no grossTotalRevB/extrasRevB for 2025, unlike the 2026 fields.
+      grossTotalRevA:[1784768,1873718,1561110,1215733,1157545,2304604,3325123,3497453,2976252,2818995,1464419,1881343],
+      extrasRevA:[309174,256498,251667,319475,179012,269094,335303,361802,307399,302292,214064,308602],
+      annual:{adr:235,occ:68,grr:22446681,ebitda:7450716, budgetAdr:228,budgetOcc:66,budgetGrr:21366829,budgetEbitda:7052540},
+      lodges:[
+        {name:'Amboseli Sopa Lodge', adr:186,occ:76,grr:4341358,ebitda:1998142, budgetAdr:181,budgetOcc:71,budgetGrr:3944994,budgetEbitda:1864412,
+          grossTotalRevA:[407790,394797,309002,183473,239961,470730,587789,583256,537565,539521,298052,390164],
+          extrasRevA:[55489,46467,40878,38632,34602,41941,59527,60008,59156,62302,35781,65958]},
+        {name:'Lake Naivasha Sopa Resort', adr:291,occ:87,grr:7545871,ebitda:4379830, budgetAdr:274,budgetOcc:88,budgetGrr:7236550,budgetEbitda:4430037,
+          grossTotalRevA:[688185,702545,769400,559620,491905,761891,1006164,1056750,943178,958001,537679,652977],
+          extrasRevA:[167848,113631,160959,189640,89076,119940,129752,147507,116893,124964,95494,126720]},
+        {name:'Lake Nakuru Sopa Lodge', adr:240,occ:70,grr:3659041,ebitda:1885030, budgetAdr:236,budgetOcc:66,budgetGrr:3402003,budgetEbitda:1760820,
+          grossTotalRevA:[267202,283207,167437,160883,157609,391872,570098,614573,510372,444457,242448,284968],
+          extrasRevA:[33338,33208,18389,31465,18369,40445,50043,55683,40978,38466,32500,43202]},
+        {name:'Masai Mara Sopa Lodge', adr:238,occ:65,grr:5708743,ebitda:2584744, budgetAdr:231,budgetOcc:66,budgetGrr:5652824,budgetEbitda:2317974,
+          grossTotalRevA:[335818,389460,259486,255102,231312,583899,965251,1008307,830170,707902,295612,428966],
+          extrasRevA:[39765,44453,24080,47362,28595,51837,68427,68254,69004,50512,36787,53466]},
+        {name:'Samburu Sopa Lodge', adr:175,occ:31,grr:1191668,ebitda:81493, budgetAdr:176,budgetOcc:29,budgetGrr:1130459,budgetEbitda:70999,
+          grossTotalRevA:[85773,103708,55785,56654,36758,96212,195820,234568,154967,169115,90628,124268],
+          extrasRevA:[12734,18738,7361,12375,8370,14932,27552,30351,21367,26049,13502,19256]}
+      ]
+    },
+    TZ: {
+      adr:[299,283,265,198,168,289,342,349,328,328,281,339],
+      occ:[30,40,19,11,24,39,80,78,56,65,24,22],
+      grr:[204795,239018,118318,48309,92173,256215,638009,635390,416712,493521,150143,175020],
+      ebitda:[71157,100507,24328,-32374,-1309,127431,406178,391576,223046,294205,25299,-9712],
+      budgetAdr:[294,273,259,166,153,281,331,330,309,305,260,308],
+      budgetOcc:[24,37,21,13,21,38,74,77,61,54,21,35],
+      budgetGrr:[164158,210264,124749,48738,74412,237389,572407,587657,423019,383056,120793,249866],
+      budgetEbitda:[32847,80023,-5070,-41175,-33496,91370,312751,344559,220865,203393,7812,90262],
+      // Tanzania = Tarangire only, so this is identical to the Tarangire lodge entry below — kept as
+      // its own array (rather than derived at render time) so periodMetrics('ALL'/'TZ') can blend it
+      // the same way it blends every other 2025A monthly field.
+      grossTotalRevA:[222750,270252,133445,60137,119102,298360,707957,699490,471956,564058,181375,195509],
+      extrasRevA:[17955,31234,15127,11828,26929,42145,69948,64100,55244,70537,31232,20489],
+      annual:{adr:311,occ:41,grr:3467623,ebitda:1620331, budgetAdr:295,budgetOcc:40,budgetGrr:3196507,budgetEbitda:1304142},
+      lodges:[
+        {name:'Tarangire Sopa Lodge', adr:311,occ:41,grr:3467623,ebitda:1620331, budgetAdr:295,budgetOcc:40,budgetGrr:3196507,budgetEbitda:1304142,
+          grossTotalRevA:[222750,270252,133445,60137,119102,298360,707957,699490,471956,564058,181375,195509],
+          extrasRevA:[17955,31234,15127,11828,26929,42145,69948,64100,55244,70537,31232,20489]}
+      ]
+    },
+    group_annual:{adr:243,occ:63.2,grr:25914305,ebitda:9071047, budgetAdr:235,budgetOcc:62,budgetGrr:24563336,budgetEbitda:8356682}
+  }
+};
+
+// ---------- Per-lodge monthly detail (from Sopa Kenya 2026 MIS workbook) ----------
+// Room Revenue / Room Nights Sold / EBITDA per lodge per month (2026 only). Used to power
+// the Period selector for partial-period (single month / multi-month / YTD) views in the
+// Performance by Property table and Leaderboard. Full Year views continue to use the
+// trusted annual figures above from the Weekly Leadership Dashboard sheet.
+const LODGE_MONTHLY = {
+  'Amboseli Sopa Lodge': {
+    revA:[410271,440608,309959,156606,223915,404947,544799,555583,509477,479926,267260,319670], revB:[388354,403844,316736,182002,239049,467243,579626,573554,524178,539935,308327,385784],
+    rnsA:[2040,2210,1539,1042,1561,2077,2457,2482,2349,2259,1292,1524], rnsB:[1955,2090,1713,1259,1710,2387,2551,2577,2455,2557,1626,1834],
+    roomsAvail:[2604,2352,2604,2520,2604,2520,2604,2604,2520,2604,2520,2604],
+    ebA:[219756,237148,137890,24594,62103,197543,306435,311993,280630,249963,128078,163991], ebB:[198844,192745,138025,45388,75429,233895,328974,323530,293435,306770,132502,207138],
+    grossTotalRevA:[491026, 506753, 356821, 214840, 259963, 454162, 615532, 612644, 570907, 531145, 338283, 376360], grossTotalRevB:[451540, 457994, 363787, 233123, 281273, 519742, 656658, 650955, 600338, 623316, 357132, 471089],
+    extrasRevA:[80755, 66145, 46862, 58234, 36048, 49215, 70733, 57061, 61430, 51219, 71023, 56690], extrasRevB:[63186, 54150, 47051, 51121, 42224, 52499, 77032, 77401, 76160, 83381, 48805, 85305]
+  },
+  'Lake Naivasha Sopa Resort': {
+    revA:[597686,651660,608608,379559,434546,631627,870191,905658,813318,780418,409219,423090], revB:[614159,641139,737361,407204,443821,701234,973555,995596,889711,891663,488015,560291],
+    rnsA:[2083,2181,2029,1803,1876,2096,2149,2283,2077,2079,1589,1817], rnsB:[2097,2250,2267,1881,1922,2414,2465,2525,2401,2420,1852,2044],
+    roomsAvail:[2542,2296,2542,2460,2294,2220,2294,2294,2220,2294,2220,2294],
+    ebA:[330664,376237,345559,188931,196463,337608,550301,551668,507365,475726,200979,196276], ebB:[387709,405987,466319,239065,228524,440013,661973,689582,590574,621565,279598,348094],
+    grossTotalRevA:[723624, 756651, 714224, 516611, 530663, 740833, 1006399, 1021120, 936622, 910407, 526475, 549589], grossTotalRevB:[803476, 822394, 890476, 607656, 580871, 885729, 1177260, 1210731, 1066925, 1125784, 646232, 758834],
+    extrasRevA:[125938, 104991, 105616, 137052, 96117, 109206, 136208, 115462, 123304, 129989, 117256, 126499], extrasRevB:[189317, 181255, 153115, 200452, 137050, 184495, 203705, 215135, 177214, 234121, 158217, 198543]
+  },
+  'Lake Nakuru Sopa Lodge': {
+    revA:[266413,311207,144361,97300,157863,325456,529112,600729,504210,432704,205661,277810], revB:[277484,272870,171886,149250,161731,379484,582742,613197,526497,478514,241764,266388],
+    rnsA:[1150,1427,681,609,1029,1544,1632,1842,1558,1387,992,1067], rnsB:[1205,1302,825,970,1043,1747,1793,1860,1706,1518,1184,1004],
+    roomsAvail:[1860,1680,1860,1800,1860,1800,1860,1860,1800,1860,1800,1860],
+    ebA:[145142,157235,41318,9204,43792,166623,329968,377217,327066,246486,79027,137112], ebB:[136209,130432,51481,36302,36008,192637,355294,381646,310349,278668,99067,123708],
+    grossTotalRevA:[315597, 346531, 165172, 128789, 182961, 360826, 589878, 648815, 552198, 466143, 224061, 298044], grossTotalRevB:[319032, 311985, 195612, 190717, 186816, 427602, 636817, 672359, 571351, 526333, 281707, 316182],
+    extrasRevA:[49184, 35324, 20811, 31489, 25098, 35370, 60766, 48086, 47988, 33439, 18400, 20234], extrasRevB:[41548, 39115, 23726, 41467, 25085, 48118, 54075, 59162, 44854, 47819, 39943, 49794]
+  },
+  'Masai Mara Sopa Lodge': {
+    revA:[452120,481209,260266,175028,258378,506081,952974,1018369,863842,536886,244591,378443], revB:[323359,416619,266641,225780,219258,585105,997039,1033868,823193,704135,279998,414056],
+    rnsA:[2063,2335,1301,1213,1826,2505,2931,3052,2594,1776,1240,1561], rnsB:[1470,2060,1346,1607,1528,2885,3013,3115,2737,2312,1425,1636],
+    roomsAvail:[3131,2828,3131,3030,3131,3030,3131,3131,3030,3131,3030,3131],
+    ebA:[166609,152314,21710,-31963,5545,152243,506001,553872,452129,176102,-1961,75409], ebB:[62174,102370,14881,-22178,-32053,187072,511425,517459,395651,319141,28287,125591],
+    grossTotalRevA:[519894, 532318, 294033, 209579, 291287, 556002, 1030163, 1082258, 924628, 570493, 259305, 391490], grossTotalRevB:[362990, 453729, 294842, 275317, 250197, 653382, 1083141, 1102209, 892427, 756108, 317758, 470867],
+    extrasRevA:[67774, 51109, 33767, 34551, 32909, 49921, 77189, 63889, 60786, 33607, 14714, 13047], extrasRevB:[39631, 37110, 28201, 49537, 30939, 68277, 86102, 68341, 69234, 51973, 37760, 56811]
+  },
+  'Samburu Sopa Lodge': {
+    revA:[128395,116654,82262,41967,66577,136119,182599,217026,190387,152395,71672,128651], revB:[107313,101196,63597,64815,35377,106588,192793,231713,144710,159581,86383,122391],
+    rnsA:[727,633,452,335,535,780,905,1103,1008,799,413,737], rnsB:[582,562,346,524,295,627,912,1104,737,908,496,714],
+    roomsAvail:[1829,1652,1829,1770,1829,1770,1829,1829,1770,1829,1770,1829],
+    ebA:[36526,24188,2689,-33572,-31316,29976,51420,75261,76292,37990,-12175,36442], ebB:[15342,11867,-12477,-15494,-33357,13473,71225,97038,36308,47572,432,21379],
+    grossTotalRevA:[153602, 138892, 98825, 52402, 79197, 158956, 207952, 250336, 224169, 176927, 85191, 153148], grossTotalRevB:[125604, 118955, 74710, 80608, 44271, 126699, 225039, 271327, 168097, 189192, 101778, 147772],
+    extrasRevA:[25207, 22238, 16563, 10435, 12620, 22837, 25353, 33310, 33782, 24532, 13519, 24497], extrasRevB:[18291, 17759, 11113, 15793, 8894, 20111, 32246, 39614, 23387, 29611, 15395, 25381]
+  },
+  'Tarangire Sopa Lodge': {
+    revA:[188619,290033,91526,39429,114560,243916,503809,577903,491679,370664,187927,281145], revB:[243045,286149,140262,59608,115576,322790,703320,701220,460043,597015,173776,270800],
+    rnsA:[593,968,306,202,628,803,1397,1543,1380,1071,662,827], rnsB:[789,971,514,295,658,1063,1957,1911,1334,1731,636,776],
+    roomsAvail:[2325,2100,2325,2250,2325,2250,2325,2325,2250,2325,2250,2325],
+    ebA:[37392,128158,-19610,-56695,-8866,89989,295028,349001,296272,175877,50544,114282], ebB:[77661,115958,-17500,-50928,-23170,120903,423590,416781,241368,347004,31024,80725],
+    grossTotalRevA:[215634, 325870, 106062, 47435, 141040, 283582, 570301, 640924, 562872, 422493, 227115, 290971], grossTotalRevB:[264081, 322613, 157913, 74114, 148326, 373957, 777900, 769364, 518791, 679428, 211323, 302061],
+    extrasRevA:[27015, 35837, 14536, 8006, 26480, 39666, 66492, 63021, 71193, 51829, 39188, 9826], extrasRevB:[21036, 36464, 17651, 14506, 32750, 51167, 74580, 68144, 58748, 82413, 37547, 31261]
+  },
+};
+
+// ---------- Per-lodge monthly detail for 2025 (Actual only) ----------
+// Sourced from two dedicated, single-year MIS workbooks the user pointed to directly (distinct from
+// the Sopa Kenya 2026 MIS workbook LODGE_MONTHLY above): "Sopa Kenya 2025 MIS" for the five Kenya
+// lodges (its "SOPA KE Monthly Consol" table gives Occupancy %, Gross ARR, and Contribution/EBITDA
+// per lodge per month) and "TSL MIS 2025" for Tarangire (its own Income Statement block, same
+// row set). Room Revenue (revA) and Room Nights Sold (rnsA) come from the Sopa Kenya 2026 MIS
+// workbook's "Last Year Room Revenue"/"Last Year Rooms Sold" columns — already used to derive
+// extrasRevA/grossTotalRevA above — since these dedicated 2025 workbooks don't expose Room Revenue
+// as a standalone row for most lodges (only Gross Total Revenue). No monthly Rooms Available needed:
+// capacity is derived from rnsA/occA the same way periodMetrics() already does everywhere else.
+// Every figure here was cross-validated against the already-trusted annual figures in DATA['2025']
+// (occ/adr/ebitda/grr match to the dollar/point, or within $1-2 of monthly rounding) before being
+// wired in — nothing here is modeled or estimated. Actual only: neither source workbook has a
+// monthly Budget breakdown by individual lodge (only annual budget figures exist per lodge), so
+// there is no revB/rnsB/ebB/occB/adrB — lodgePeriod()'s 2025 branch returns nulls for Budget in a
+// partial period, same "not available" handling used for 2025 grossTotalB/extrasB.
+const LODGE_MONTHLY_2025 = {
+  'Amboseli Sopa Lodge': {
+    revA:[352301, 348330, 268124, 144841, 205359, 428789, 528262, 523248, 478409, 477219, 262271, 324206], rnsA:[1862, 1944, 1557, 1032, 1513, 2340, 2551, 2577, 2455, 2435, 1478, 1624],
+    occA:[72, 83, 60, 41, 58, 93, 98, 99, 97, 94, 59, 62], adrA:[189, 179, 172, 140, 136, 183, 207, 203, 195, 196, 177, 200], ebA:[168898, 157276, 111054, 23348, 51037, 218102, 293397, 291162, 248505, 264246, 96466, 74651]
+  },
+  'Lake Naivasha Sopa Resort': {
+    revA:[520337, 588914, 608441, 369980, 402829, 641951, 876412, 909243, 826285, 833037, 442185, 526257], rnsA:[1997, 2250, 2159, 1791, 1830, 2390, 2429, 2525, 2377, 2396, 1764, 2024],
+    occA:[79, 98, 85, 73, 72, 97, 96, 99, 97, 94, 72, 80], adrA:[261, 262, 282, 207, 220, 269, 361, 360, 348, 348, 251, 260], ebA:[311318, 352311, 395621, 220145, 167968, 357363, 537939, 595751, 490801, 520163, 190257, 240193]
+  },
+  'Lake Nakuru Sopa Lodge': {
+    revA:[233864, 249999, 149048, 129418, 139240, 351427, 520055, 558890, 469394, 405991, 209948, 241766], rnsA:[1095, 1240, 750, 866, 931, 1696, 1758, 1862, 1625, 1380, 1076, 956],
+    occA:[59, 74, 40, 48, 50, 94, 95, 100, 90, 74, 60, 51], adrA:[214, 202, 199, 149, 150, 207, 296, 300, 289, 294, 195, 253], ebA:[120013, 127834, 32375, 33197, 29879, 194710, 314313, 352335, 281356, 233961, 79987, 85068]
+  },
+  'Masai Mara Sopa Lodge': {
+    revA:[296053, 345007, 235406, 207740, 202717, 532062, 896824, 940053, 761166, 657390, 258825, 375500], rnsA:[1413, 1791, 1224, 1523, 1455, 2748, 2954, 3115, 2632, 2245, 1357, 1543],
+    occA:[45, 63, 39, 50, 46, 91, 94, 99, 87, 72, 45, 49], adrA:[210, 193, 192, 136, 139, 194, 304, 302, 289, 293, 191, 243], ebA:[83974, 124962, 36544, 14132, 4991, 233593, 528248, 548069, 427220, 357075, 58535, 167400]
+  },
+  'Samburu Sopa Lodge': {
+    revA:[73039, 84970, 48424, 44279, 28388, 81280, 168268, 204217, 133600, 143066, 77126, 105012], rnsA:[408, 497, 271, 389, 239, 502, 843, 1021, 714, 839, 459, 631],
+    occA:[22, 30, 15, 22, 13, 28, 45, 55, 40, 46, 26, 34], adrA:[179, 171, 179, 114, 119, 162, 200, 200, 187, 171, 168, 166], ebA:[-2930, 25555, -14890, -29171, -54808, -6791, 61576, 78904, 10394, 29745, -8560, -7531]
+  },
+  'Tarangire Sopa Lodge': {
+    revA:[204795, 239018, 118318, 48309, 92173, 256215, 638009, 635390, 416712, 493521, 150143, 175020], rnsA:[686, 844, 447, 244, 548, 886, 1864, 1820, 1270, 1504, 535, 517],
+    occA:[30, 40, 19, 11, 24, 39, 80, 78, 56, 65, 24, 22], adrA:[299, 283, 265, 198, 168, 289, 342, 349, 328, 328, 281, 339], ebA:[71157, 100507, 24328, -32374, -1309, 127431, 406178, 391576, 223046, 294205, 25299, -9712]
+  }
+};
+
+// ---------- State ----------
+const YTD_MONTHS = [0,1,2,3,4,5,6,7]; // Jan through Aug — "current month" per report-as-of date
+// view: 'af' (Actual + Forecast, blends confirmed bookings with the remaining months' forecast —
+// the default, matches the sheet's own T/U/V/W "A+F" columns) or 'confirmed' (only guest
+// reservations already confirmed — the sheet's raw Conf Occ/ARR/Room Rev/Room Nights columns,
+// excluding both Budget and any still-provisional bookings). 2025 is a closed year with no
+// forecast/provisional layer at all, so the toggle has no effect there — see the `closed` flag
+// threaded through every metrics object below.
+let state = { year:'2026', country:'ALL', month:7, metric:'revenue', selectedMonths:[0,1,2,3,4,5,6,7,8,9,10,11], property:'ALL', view:'af' }; // default period is Full Year; month index 7 = Aug (report-as-of date, used by Month Focus only)
+
+// Lodge name -> country, used to keep the Property filter and Country toggle in sync.
+const LODGE_COUNTRY = {
+  'Amboseli Sopa Lodge':'KE', 'Lake Naivasha Sopa Resort':'KE', 'Lake Nakuru Sopa Lodge':'KE',
+  'Masai Mara Sopa Lodge':'KE', 'Samburu Sopa Lodge':'KE', 'Tarangire Sopa Lodge':'TZ'
+};
+const PROPERTY_LIST = ['Amboseli Sopa Lodge','Lake Naivasha Sopa Resort','Lake Nakuru Sopa Lodge','Masai Mara Sopa Lodge','Samburu Sopa Lodge','Tarangire Sopa Lodge'];
+
+function findLodge(name, year){
+  if(!name || name==='ALL') return null;
+  const all = [...(DATA[year].KE.lodges||[]), ...(DATA[year].TZ.lodges||[])];
+  return all.find(l => l.name === name) || null;
+}
+
+// ---------- Format helpers ----------
+const fmtNum = n => n===null||n===undefined ? '—' : Math.round(n).toLocaleString('en-US');
+const fmtMoney = n => n===null||n===undefined ? '—' : (n<0?'-':'') + '$' + Math.round(Math.abs(n)).toLocaleString('en-US');
+const fmtPct = n => n===null||n===undefined ? '—' : (n>0?'+':'') + n.toFixed(1).replace(/\.0$/,'') + '%';
+const fmtPtDiff = n => n===null||n===undefined ? '—' : (n>0?'+':'') + (Math.round(n*10)/10) + 'pp';
+
+const METRIC_CONFIG = {
+  revenue:{ label:'Revenue', full:'Gross Room Revenue', fmt:'moneyBig' },
+  revpar:{ label:'RevPAR', full:'RevPAR', fmt:'moneySmall' },
+  occ:{ label:'Occ', full:'Occupancy', fmt:'pct' },
+  adr:{ label:'ADR', full:'ADR', fmt:'moneySmall' },
+  rns:{ label:'RNS', full:'Room Nights Sold', fmt:'count' },
+  ebitda:{ label:'EBITDA', full:'EBITDA', fmt:'moneyBig' },
+  grossTotal:{ label:'Gross Total Rev', full:'Total Gross Revenue', fmt:'moneyBig' },
+  extras:{ label:'Extras', full:'Extras Revenue', fmt:'moneyBig' },
+  // Total value of still-provisional (not yet confirmed) room revenue, summed across whichever
+  // properties are in scope — sourced from the sheet's own Prov Room Rev columns, which already
+  // are a per-property sum (cross-checked: KE annual Prov Room Rev = the 5 Kenya lodges' own
+  // provRoomRev figures summed exactly). No Budget or 2025 concept applies to this metric — a
+  // closed year has nothing left "provisional" and there is no "Budget Provisional Revenue"
+  // line anywhere in the source, so its KPI card only ever shows the headline figure. The value
+  // itself is unaffected by the View toggle, but the KPI CARD is only shown in Confirmed view —
+  // see renderKPIs()'s `order` filter — since "how much is still unconfirmed" is only relevant
+  // context while looking at Confirmed-only figures, not on the A+F row (which already blends
+  // provisional-and-beyond into the headline numbers).
+  provRev:{ label:'Provisional Rev', full:'Provisional Room Revenue', fmt:'moneyBig' }
+};
+
+function fmtByType(v, type){
+  if(v===null||v===undefined) return '—';
+  if(type==='pct') return v.toFixed(1).replace(/\.0$/,'') + '%';
+  if(type==='count') return fmtNum(v);
+  if(type==='moneySmall') return fmtMoney(v);
+  if(type==='moneyBig'){
+    const sign = v<0 ? '-' : '';
+    const abs = Math.abs(v);
+    if(abs>=1000000) return sign+'$'+(abs/1e6).toFixed(2)+'m';
+    if(abs>=1000) return sign+'$'+(abs/1000).toFixed(0)+'k';
+    return sign+'$'+abs.toFixed(0);
+  }
+}
+
+function pctChip(actual, base, isPoints){
+  if(actual===null||actual===undefined||base===null||base===undefined) return {cls:'na', text:'N/A'};
+  const diff = actual - base;
+  const pct = isPoints ? diff : (base!==0 ? (diff/Math.abs(base))*100 : 0);
+  const cls = diff>=0 ? 'pos' : 'neg';
+  const text = isPoints ? fmtPtDiff(diff) : fmtPct(pct);
+  return {cls, text, diff};
+}
+
+function sumArr(a,b){ return a.map((v,i)=> (v||0) + (b[i]||0)); }
+
+function getMonthly(year, country, field){
+  if(country==='ALL'){
+    const ke = DATA[year].KE[field] || [];
+    const tz = DATA[year].TZ[field] || [];
+    if(!ke.length) return [];
+    return sumArr(ke, tz);
+  }
+  return DATA[year][country][field] || [];
+}
+
+function getAnnual(year, country){
+  if(country==='ALL') return DATA[year].group_annual;
+  return DATA[year][country].annual;
+}
+
+function rns(grr, adr){ return (grr && adr) ? Math.round(grr/adr) : null; }
+
+// Returns fully-resolved metrics for a single month, correctly BLENDING Kenya+Tanzania
+// when country==='ALL' — rate metrics (occupancy %, ADR) are capacity-weighted, not summed.
+function getMonthMetrics(year, country, i){
+  if(country !== 'ALL'){
+    const src = DATA[year][country];
+    const m = { adrA: src.adr[i], occA: src.occ[i], grrA: src.grr[i] };
+    // Rooms Available (physical room-nights for sale) — only populated for 2026 (see KE/TZ.roomsAvail
+    // comment). Lets RevPAR be computed as Revenue ÷ Rooms Available (matches the MIS's own "Gross
+    // RevPAR" row exactly) instead of ADR × Occupancy% using whole-number-rounded inputs. 2025 has no
+    // such field in its source, so this stays undefined there and metricVal() falls back to ADR × Occ.
+    if(src.roomsAvail) m.roomsAvail = src.roomsAvail[i];
+    if(year==='2026'){
+      m.ebA = src.ebitdaActual[i]; m.ebB = src.ebitdaBudget[i];
+      m.budgOcc = src.budgOcc[i]; m.confOcc = src.confOcc[i]; m.provOcc = src.provOcc[i]||0;
+      m.budgARR = src.budgARR[i]; m.confARR = src.confARR[i]; m.provARR = src.provARR[i];
+      m.budgRev = src.budgRoomRev[i]; m.confRev = src.confRoomRev[i]; m.provRev = src.provRoomRev[i]||0;
+      m.budgRN = src.budgRN[i]; m.confRN = src.confRN[i]; m.provRN = src.provRN[i]||0;
+      // Total Gross Revenue / Extras Revenue: sourced from the Sopa Kenya 2026 MIS workbook
+      // (not in the Weekly Leadership Dashboard sheet at all) — 2026 only, see LODGE_MONTHLY note.
+      if(src.grossTotalRevA){
+        m.grossTotalA = src.grossTotalRevA[i]; m.grossTotalB = src.grossTotalRevB[i];
+        m.extrasA = src.extrasRevA[i]; m.extrasB = src.extrasRevB[i];
+      }
+    } else {
+      // 2025 is a closed year — every one of its figures is already final/"confirmed", there is no
+      // forecast or provisional layer left to strip out. metricVal() checks this flag and, when set,
+      // never substitutes a Confirmed-only figure (there isn't one to substitute) — the View toggle
+      // simply has no effect here, same as if it always read "confirmed = actual" for a closed year.
+      m.closed = true;
+      m.ebA = src.ebitda[i]; m.ebB = src.budgetEbitda[i];
+      m.budgOcc = src.budgetOcc[i]; m.budgARR = src.budgetAdr[i]; m.budgRev = src.budgetGrr[i];
+      m.budgRN = rns(m.budgRev, m.budgARR);
+      // 2025 Total Gross Revenue / Extras Revenue — from the MIS workbook's 2025A columns,
+      // Actual only (no 2025 Budget series in that source). Populated for KE, TZ, and (via
+      // lodgeExtraMetrics) every individual lodge; undefined for any entity lacking the field,
+      // so periodMetrics()'s hasExtra guard correctly falls back to "not available" rather than
+      // summing a partial figure.
+      if(src.grossTotalRevA){
+        m.grossTotalA = src.grossTotalRevA[i]; m.extrasA = src.extrasRevA[i];
+      }
+    }
+    return m;
+  }
+  const ke = getMonthMetrics(year, 'KE', i);
+  const tz = getMonthMetrics(year, 'TZ', i);
+
+  const grrA = ke.grrA + tz.grrA;
+  const rnsKE = rns(ke.grrA, ke.adrA) || 0, rnsTZ = rns(tz.grrA, tz.adrA) || 0;
+  const totalRNS = rnsKE + rnsTZ;
+  const adrA = totalRNS ? grrA/totalRNS : null;
+  const capKE = ke.occA ? rnsKE/(ke.occA/100) : 0, capTZ = tz.occA ? rnsTZ/(tz.occA/100) : 0;
+  const occA = (capKE+capTZ) ? (totalRNS/(capKE+capTZ))*100 : null;
+
+  // Guarded with ||0 (unlike grrA above, which is never null) because a single month's ebA can
+  // in principle be null if a source sheet update is ever mid-flight for one country — without
+  // the guard, one country's real EBITDA + the other's null would silently become NaN for that
+  // month's blended Group figure. Not currently triggered by any month in the live data.
+  const ebA = (ke.ebA||0) + (tz.ebA||0);
+  const ebB = (ke.ebB||0) + (tz.ebB||0);
+  const budgRev = ke.budgRev + tz.budgRev;
+  const budgRN = ke.budgRN + tz.budgRN;
+  const budgARR = budgRN ? budgRev/budgRN : null;
+  const capBKE = ke.budgOcc ? ke.budgRN/(ke.budgOcc/100) : 0, capBTZ = tz.budgOcc ? tz.budgRN/(tz.budgOcc/100) : 0;
+  const budgOcc = (capBKE+capBTZ) ? (budgRN/(capBKE+capBTZ))*100 : null;
+
+  const result = { adrA, occA, grrA, ebA, ebB, budgOcc, budgARR, budgRev, budgRN, closed: ke.closed };
+  if(ke.roomsAvail!=null && tz.roomsAvail!=null) result.roomsAvail = ke.roomsAvail + tz.roomsAvail;
+
+  // Actual and Budget combined independently — 2025 has Actual-only grossTotal/extras data (no
+  // Budget series at all in the source), so KE.grossTotalB/tz.grossTotalB are both genuinely
+  // undefined there; combining them under one shared guard would silently produce `undefined +
+  // undefined === NaN` instead of leaving the Budget side correctly unavailable.
+  if(ke.grossTotalA!==undefined && tz.grossTotalA!==undefined){
+    result.grossTotalA = ke.grossTotalA + tz.grossTotalA;
+    result.extrasA = ke.extrasA + tz.extrasA;
+  }
+  if(ke.grossTotalB!==undefined && tz.grossTotalB!==undefined){
+    result.grossTotalB = ke.grossTotalB + tz.grossTotalB;
+    result.extrasB = ke.extrasB + tz.extrasB;
+  }
+
+  if(year==='2026'){
+    const confRN = ke.confRN + tz.confRN;
+    const confRev = ke.confRev + tz.confRev;
+    const confARR = confRN ? confRev/confRN : null;
+    const capCKE = ke.confOcc ? ke.confRN/(ke.confOcc/100) : 0, capCTZ = tz.confOcc ? tz.confRN/(tz.confOcc/100) : 0;
+    const confOcc = (capCKE+capCTZ) ? (confRN/(capCKE+capCTZ))*100 : null;
+    const provRN = (ke.provRN||0) + (tz.provRN||0);
+    const provRev = (ke.provRev||0) + (tz.provRev||0);
+    const provOcc = (capCKE+capCTZ) ? (provRN/(capCKE+capCTZ))*100 : 0;
+    Object.assign(result, {confRN, confRev, confARR, confOcc, provRN, provRev, provOcc});
+  }
+  return result;
+}
+
+// Pull actual/budget value for a given metric key from a getMonthMetrics() result.
+// The View toggle (state.view) only changes what "actual" means, and only for an open year:
+// 'af' (default) reads the existing Actual+Forecast fields (mm.grrA/adrA/occA/ebA/...), exactly as
+// before this toggle existed. 'confirmed' substitutes the sheet's raw Confirmed-only columns
+// (mm.confRev/confOcc/confARR/confRN) for Revenue/Occupancy/ADR/RNS — but EBITDA, RevPAR, Extras
+// Revenue and Total Gross Revenue have no Confirmed-only figure anywhere in the source data (only
+// an Actual+Forecast total and a Budget exist for those), so they correctly render as "—" rather
+// than being estimated. `mm.closed` (set on every 2025-sourced metrics object — 2025 has no
+// forecast/provisional layer, so its Actual already IS Confirmed) bypasses this substitution
+// entirely, so switching the View toggle while looking at 2025 — or at a 2025 "vs prior year"
+// comparison from within a 2026 view — has no effect and never shows a false "—".
+function metricVal(mm, metricKey, which){
+  if(which==='actual' && state.view==='confirmed' && !mm.closed){
+    if(metricKey==='revenue') return mm.confRev ?? null;
+    if(metricKey==='occ')     return mm.confOcc ?? null;
+    if(metricKey==='adr')     return mm.confARR ?? null;
+    if(metricKey==='rns')     return mm.confRN ?? null;
+    if(metricKey==='provRev') return mm.provRev ?? null; // unaffected by view — see METRIC_CONFIG note
+    // RevPAR IS computable on a Confirmed-only basis (unlike EBITDA/Extras/Gross Total Revenue,
+    // which have no Confirmed-only source at all) — Confirmed Room Revenue ÷ Rooms Available,
+    // the same real room-inventory figure the A+F RevPAR calc below uses. Only available where
+    // both mm.confRev and mm.roomsAvail exist (2026, and — at lodge scope — Full Year only).
+    if(metricKey==='revpar') return (mm.roomsAvail && mm.confRev!=null) ? mm.confRev/mm.roomsAvail : null;
+    // EBITDA, Extras Revenue, Total Gross Revenue: no Confirmed-only figure anywhere in the
+    // source data — these are hidden from the KPI row entirely in Confirmed view (see
+    // renderKPIs), so returning null here is only reached by any other caller (e.g. the trend
+    // chart's EBITDA tab), where showing "—" is correct.
+    return null;
+  }
+  if(metricKey==='provRev') return which==='actual' ? (mm.provRev ?? null) : null; // no Budget concept for this metric
+  if(metricKey==='revenue') return which==='actual' ? mm.grrA : mm.budgRev;
+  // RevPAR = Gross Room Revenue ÷ Rooms Available for Sale — computed directly from mm.roomsAvail
+  // (the real monthly room-inventory figure threaded through getMonthMetrics/periodMetrics/
+  // lodgePeriod/monthMetricsScoped for 2026), which matches the Sopa Kenya 2026 MIS workbook's own
+  // "Gross RevPAR" row exactly (cross-checked: Jan KE 1,854,885 ÷ 11,966 = 155, same as the MIS's
+  // "Gross RevPAR" line for that month). This is more precise than ADR × Occupancy%, which the KPI
+  // previously used, because that multiplies two already-whole-number-rounded inputs together.
+  // 2025 has no Rooms Available figure in its source (LODGE_MONTHLY_2025 / DATA['2025'] — see those
+  // comments), so the Actual side falls back to ADR × Occupancy% there — mathematically the same
+  // thing, just built from rounded inputs. Budget/Confirmed RevPAR always uses budgARR × budgOcc,
+  // since the MIS budget scenario has its own distinct Rooms Available series (a different assumed
+  // room inventory) rather than sharing the actual's — not yet wired in — so this fallback keeps
+  // Budget RevPAR consistent with every other Budget metric on the dashboard.
+  if(metricKey==='revpar'){
+    if(which==='actual'){
+      if(mm.roomsAvail) return mm.grrA / mm.roomsAvail;
+      return (mm.adrA!=null && mm.occA!=null) ? mm.adrA*(mm.occA/100) : null;
+    }
+    return (mm.budgARR!=null && mm.budgOcc!=null) ? mm.budgARR*(mm.budgOcc/100) : null;
+  }
+  if(metricKey==='occ')     return which==='actual' ? mm.occA : mm.budgOcc;
+  if(metricKey==='adr')     return which==='actual' ? mm.adrA : mm.budgARR;
+  if(metricKey==='rns')     return which==='actual' ? rns(mm.grrA, mm.adrA) : mm.budgRN;
+  if(metricKey==='ebitda')  return which==='actual' ? mm.ebA : mm.ebB;
+  if(metricKey==='grossTotal') return which==='actual' ? (mm.grossTotalA ?? null) : (mm.grossTotalB ?? null);
+  if(metricKey==='extras') return which==='actual' ? (mm.extrasA ?? null) : (mm.extrasB ?? null);
+}
+
+// Monthly series (12 values) for a metric, properly blended for ALL via getMonthMetrics
+function metricSeries(year, country, metricKey, which){
+  return MONTHS.map((_,i) => metricVal(getMonthMetrics(year, country, i), metricKey, which));
+}
+
+// Single-month metrics for the current scope (country, or a single property when the Property
+// filter is active) — mirrors getMonthMetrics()'s shape so metricVal() works unchanged. Property-
+// level monthly detail exists for 2026 (LODGE_MONTHLY) and 2025 (LODGE_MONTHLY_2025, Actual only —
+// no monthly Budget per lodge in either 2025 source); any other year/lodge without the field
+// returns nulls for a selected property, same "not available" handling used elsewhere for real gaps.
+function monthMetricsScoped(year, i){
+  if(state.property === 'ALL') return getMonthMetrics(year, state.country, i);
+  if(year === '2026'){
+    const lm = LODGE_MONTHLY[state.property];
+    if(!lm) return { adrA:null, occA:null, grrA:null, ebA:null, ebB:null, budgOcc:null, budgARR:null, budgRev:null, budgRN:null, roomsAvail:null };
+    const occA = lm.roomsAvail[i] ? (lm.rnsA[i]/lm.roomsAvail[i])*100 : null;
+    const budgOcc = lm.roomsAvail[i] ? (lm.rnsB[i]/lm.roomsAvail[i])*100 : null;
+    const adrA = lm.rnsA[i] ? lm.revA[i]/lm.rnsA[i] : null;
+    const budgARR = lm.rnsB[i] ? lm.revB[i]/lm.rnsB[i] : null;
+    return { adrA, occA, grrA:lm.revA[i], ebA:lm.ebA[i], ebB:lm.ebB[i], budgOcc, budgARR, budgRev:lm.revB[i], budgRN:lm.rnsB[i], roomsAvail: lm.roomsAvail[i] };
+  }
+  const lm2025 = LODGE_MONTHLY_2025[state.property];
+  if(!lm2025) return { adrA:null, occA:null, grrA:null, ebA:null, ebB:null, budgOcc:null, budgARR:null, budgRev:null, budgRN:null, roomsAvail:null, closed:true };
+  return {
+    adrA: lm2025.adrA[i], occA: lm2025.occA[i], grrA: lm2025.revA[i], ebA: lm2025.ebA[i], ebB: null,
+    budgOcc: null, budgARR: null, budgRev: null, budgRN: null, roomsAvail: null, closed:true
+  };
+}
+
+// Monthly series (12 values) for the current scope — country (via metricSeries) or a single
+// property (via monthMetricsScoped). Used by the trend chart and monthly detail bars.
+function metricSeriesScoped(year, metricKey, which){
+  if(state.property === 'ALL') return metricSeries(year, state.country, metricKey, which);
+  return MONTHS.map((_,i) => metricVal(monthMetricsScoped(year, i), metricKey, which));
+}
+
+// Annual total for revenue/rns/ebitda computed by summing the monthly series (matches design's
+// stated RNS methodology of "per month per country, then summed", applied consistently).
+function annualFromMonthly(year, country, metricKey, which){
+  return metricSeries(year, country, metricKey, which).reduce((a,b)=>a+(b||0),0);
+}
+
+// ---------- Period selector (month / multi-month / YTD) ----------
+function isFullYear(months){ return months && months.length===12; }
+
+function periodLabel(months){
+  const sorted = [...months].sort((a,b)=>a-b);
+  if(sorted.length===0) return 'No months selected';
+  if(isFullYear(sorted)) return 'Full Year (Jan–Dec)';
+  if(sorted.length===YTD_MONTHS.length && sorted.every((m,i)=>m===YTD_MONTHS[i])) return `YTD (Jan–${MONTHS[sorted[sorted.length-1]]})`;
+  if(sorted.length===1) return MONTHS[sorted[0]];
+  if(sorted.length<=3) return sorted.map(m=>MONTHS[m]).join(', ');
+  return `${sorted.length} months selected`;
+}
+
+// Both years now have a monthly per-lodge source (LODGE_MONTHLY for 2026, LODGE_MONTHLY_2025 for
+// 2025), so the Period selector applies to whichever year is active — the selection just passes
+// through unchanged.
+function effectiveMonths(){
+  return state.selectedMonths;
+}
+
+// Aggregates getMonthMetrics() across an arbitrary set of months, correctly capacity-weighting
+// occupancy/ADR (never averaging percentages) — same shape as getMonthMetrics() so metricVal() works unchanged.
+function periodMetrics(year, country, months){
+  const list = (months && months.length) ? months : [0];
+  let grrA=0, budgRev=0, rnsA=0, rnsB=0, capA=0, capB=0, ebA=0, ebB=0;
+  // Actual and Budget for grossTotal/extras are tracked with independent availability flags —
+  // 2025 has real Actual figures for these two metrics (KE, TZ, and every lodge) but no Budget
+  // series at all in the source workbook, so the two can't share one guard without turning
+  // missing Budget values into NaN.
+  let grossTotalA=0, grossTotalB=0, extrasA=0, extrasB=0, hasExtraA=true, hasExtraB=true;
+  // Rooms Available sums directly (it's a real monthly room-inventory figure, 2026 only) — guarded
+  // the same way as grossTotal/extras above, so a 2025 period correctly reports "not available"
+  // rather than silently summing a partial figure.
+  let roomsAvailSum=0, hasRoomsAvail=true;
+  // Confirmed-only (Conf Occ/ARR/Room Rev/Room Nights) and Provisional Room Revenue both come
+  // straight off the sheet's own monthly columns via getMonthMetrics — 2026 only, so guarded the
+  // same way as grossTotal/extras/roomsAvail above. Capacity-weighted the same way occA/budgOcc
+  // are, never averaged as a raw percentage.
+  const isOpenYear = year==='2026';
+  let confRevSum=0, confRNSum=0, confCapSum=0, provRevSum=0;
+  list.forEach(i=>{
+    const mm = getMonthMetrics(year, country, i);
+    const mA = rns(mm.grrA, mm.adrA) || 0;
+    const mB = mm.budgRN || 0;
+    grrA += mm.grrA||0; budgRev += mm.budgRev||0;
+    rnsA += mA; rnsB += mB;
+    capA += mm.occA ? mA/(mm.occA/100) : 0;
+    capB += mm.budgOcc ? mB/(mm.budgOcc/100) : 0;
+    ebA += mm.ebA||0; ebB += mm.ebB||0;
+    if(mm.grossTotalA!==undefined){ grossTotalA += mm.grossTotalA; extrasA += mm.extrasA; } else { hasExtraA = false; }
+    if(mm.grossTotalB!==undefined){ grossTotalB += mm.grossTotalB; extrasB += mm.extrasB; } else { hasExtraB = false; }
+    if(mm.roomsAvail!=null){ roomsAvailSum += mm.roomsAvail; } else { hasRoomsAvail = false; }
+    if(isOpenYear){
+      confRevSum += mm.confRev||0; confRNSum += mm.confRN||0;
+      confCapSum += mm.confOcc ? mm.confRN/(mm.confOcc/100) : 0;
+      provRevSum += mm.provRev||0;
+    }
+  });
+  const adrA = rnsA ? grrA/rnsA : null;
+  const occA = capA ? (rnsA/capA)*100 : null;
+  const budgARR = rnsB ? budgRev/rnsB : null;
+  const budgOcc = capB ? (rnsB/capB)*100 : null;
+  return {
+    grrA, budgRev, adrA, budgARR, occA, budgOcc, budgRN: rnsB, ebA, ebB,
+    closed: !isOpenYear,
+    grossTotalA: hasExtraA?grossTotalA:null, grossTotalB: hasExtraB?grossTotalB:null,
+    extrasA: hasExtraA?extrasA:null, extrasB: hasExtraB?extrasB:null,
+    roomsAvail: hasRoomsAvail?roomsAvailSum:null,
+    // Confirmed Occ/ARR/Room Rev/Room Nights at Full Year use the sheet's own trusted annual
+    // per-country table (rows 2-13 of the '2026.' tab) directly, NOT a sum of the monthly-by-
+    // country table further down the sheet (rows 15-45) — unlike every other column (Budget,
+    // Provisional, and the blended A+F Occ/ARR/Revenue/EBITDA), the sheet's own two tables do
+    // NOT reconcile for the raw Confirmed columns specifically: e.g. KE's annual table states
+    // Confirmed Room Rev = $21,412,651 (row 8, column L) while summing the monthly table's own
+    // Totals row (row 29, column L) gives $21,452,329 — a real $39,678 gap in the source data
+    // itself, not a rounding artifact (Confirmed bookings are a live, fast-moving figure and the
+    // two tables apparently refresh independently). Reported by the user comparing the dashboard
+    // against "column C to R" of the sheet, i.e. the annual table — so Full Year now matches that
+    // table exactly, the same "Full Year trusts the annual table, partial period sums monthly
+    // detail" rule already used for every other metric on this dashboard (see lodgePeriod()).
+    ...(isOpenYear && isFullYear(months) ? (() => {
+      const ann = getAnnual(year, country);
+      return { confRev: ann.confRoomRev, confRN: ann.confRN, confARR: ann.confARR, confOcc: ann.confOcc };
+    })() : {
+      confRev: isOpenYear?confRevSum:null, confRN: isOpenYear?confRNSum:null,
+      confARR: isOpenYear&&confRNSum ? confRevSum/confRNSum : null,
+      confOcc: isOpenYear&&confCapSum ? (confRNSum/confCapSum)*100 : null,
+    }),
+    provRev: isOpenYear?provRevSum:null
+  };
+}
+
+// Period-aware lodge metrics: Full Year always uses the trusted annual figures from the Weekly
+// Leadership Dashboard sheet, for both years. A partial period sums monthly detail from a
+// dedicated MIS workbook: 2026 from LODGE_MONTHLY (Sopa Kenya 2026 MIS), 2025 from
+// LODGE_MONTHLY_2025 (Sopa Kenya 2025 MIS + TSL MIS 2025 — see that constant's comment). Neither
+// 2025 source has a monthly Budget breakdown per lodge (only annual budget figures exist), so a
+// partial-period 2025 view returns null for every Budget field — same "not available" handling
+// used for 2025 grossTotalB/extrasB. `year` is passed explicitly (rather than read from
+// state.year) so this can also be used to compute a prior-year (2025) comparison for a selected
+// property while the Year toggle itself is still on 2026 — see scopedMetrics().
+function lodgePeriod(l, months, isAF, year){
+  year = year || state.year;
+  if(isFullYear(months)){
+    return {
+      revA: l.grr, revB: isAF ? l.budgRoomRev : l.budgetGrr,
+      occ: l.occ, adr: l.adr, rnsVal: rns(l.grr, l.adr),
+      eb: isAF ? l.ebitdaActual : l.ebitda,
+      ebB: isAF ? l.ebitdaBudget : l.budgetEbitda,
+      budgOcc: isAF ? l.budgOcc : l.budgetOcc,
+      budgARR: isAF ? l.budgARR : l.budgetAdr,
+      budgRN: isAF ? l.budgRN : rns(l.budgetGrr, l.budgetAdr),
+      // Full-year Rooms Available: only stored (and only meaningful) for 2026 lodges — see each
+      // lodge object's `roomsAvail` field. Lets RevPAR = Revenue ÷ Rooms Available match the MIS
+      // exactly at Full Year scope too, same as the partial-period branch below.
+      roomsAvail: isAF ? l.roomsAvail : null,
+      // Confirmed-only figures come straight off the lodge's own annual Conf Occ/ARR/Room Rev/Room
+      // Nights fields (2026 only — a 2025 lodge object has no such split, `closed` makes it moot).
+      // Provisional Room Revenue likewise — a real annual sheet figure, 2026 only.
+      confOcc: isAF ? l.confOcc : null, confARR: isAF ? l.confARR : null,
+      confRev: isAF ? l.confRoomRev : null, confRN: isAF ? l.confRN : null,
+      provRev: isAF ? l.provRoomRev : null,
+      closed: !isAF
+    };
+  }
+  if(year === '2026'){
+    const lm = LODGE_MONTHLY[l.name];
+    if(!lm){
+      const frac = months.length/12;
+      const bRN = isAF ? l.budgRN : rns(l.budgetGrr, l.budgetAdr);
+      return {
+        revA:l.grr*frac, revB:l.budgRoomRev*frac, occ:l.occ, adr:l.adr, rnsVal:Math.round(rns(l.grr,l.adr)*frac),
+        eb:l.ebitdaActual*frac, ebB:(isAF?l.ebitdaBudget:l.budgetEbitda)*frac,
+        budgOcc:isAF?l.budgOcc:l.budgetOcc, budgARR:isAF?l.budgARR:l.budgetAdr,
+        budgRN: bRN!=null ? Math.round(bRN*frac) : null,
+        roomsAvail: l.roomsAvail!=null ? l.roomsAvail*frac : null,
+        // No monthly per-lodge Confirmed/Provisional split exists anywhere in the source (the MIS
+        // workbook's Rooms Available/Sold/Revenue table only distinguishes Actual vs Forecast, not
+        // Confirmed vs Provisional) — "not available for a partial period", same handling as every
+        // other real gap in this function.
+        confOcc:null, confARR:null, confRev:null, confRN:null, provRev:null, closed:false
+      };
+    }
+    let revA=0, revB=0, rnsA=0, rnsB=0, availSum=0, eb=0, ebB=0;
+    months.forEach(i=>{
+      revA += lm.revA[i]; revB += lm.revB[i];
+      rnsA += lm.rnsA[i]; rnsB += lm.rnsB[i]; availSum += lm.roomsAvail[i];
+      eb += lm.ebA[i]; ebB += lm.ebB[i];
+    });
+    return {
+      revA, revB,
+      occ: availSum ? (rnsA/availSum)*100 : 0,
+      adr: rnsA ? revA/rnsA : 0,
+      rnsVal: Math.round(rnsA),
+      eb, ebB,
+      budgOcc: availSum ? (rnsB/availSum)*100 : 0,
+      budgARR: rnsB ? revB/rnsB : 0,
+      budgRN: Math.round(rnsB),
+      roomsAvail: availSum,
+      // Same MIS-workbook limitation as the branch above — no per-lodge monthly Confirmed/
+      // Provisional split exists to sum for a partial period.
+      confOcc:null, confARR:null, confRev:null, confRN:null, provRev:null, closed:false
+    };
+  }
+  const lm2025 = LODGE_MONTHLY_2025[l.name];
+  if(!lm2025){
+    const frac = months.length/12;
+    return {
+      revA:l.grr*frac, revB:null, occ:l.occ, adr:l.adr, rnsVal:Math.round(rns(l.grr,l.adr)*frac),
+      eb:l.ebitda*frac, ebB:null, budgOcc:null, budgARR:null, budgRN:null, roomsAvail:null, closed:true
+    };
+  }
+  let revA2025=0, rnsA2025=0, capA2025=0, eb2025=0;
+  months.forEach(i=>{
+    revA2025 += lm2025.revA[i];
+    const r = lm2025.rnsA[i];
+    rnsA2025 += r;
+    capA2025 += lm2025.occA[i] ? r/(lm2025.occA[i]/100) : 0;
+    eb2025 += lm2025.ebA[i];
+  });
+  return {
+    revA: revA2025, revB: null,
+    occ: capA2025 ? (rnsA2025/capA2025)*100 : 0,
+    adr: rnsA2025 ? revA2025/rnsA2025 : 0,
+    rnsVal: Math.round(rnsA2025),
+    eb: eb2025, ebB: null,
+    budgOcc: null, budgARR: null, budgRN: null, roomsAvail: null, closed:true
+  };
+}
+
+// Total Gross Revenue / Extras Revenue for a single lodge over an arbitrary set of months.
+// 2026 sources monthly detail from LODGE_MONTHLY (Sopa Kenya 2026 MIS workbook, Actual + Budget).
+// 2025 sources it from the lodge object's own grossTotalRevA/extrasRevA arrays (same workbook's
+// 2025A columns — see the DATA['2025'] comment for how these are derived) — Actual only, no
+// 2025 Budget series exists in the source for either metric. Any other year/lodge combination
+// without the field returns nulls, same "not available" handling used elsewhere for real gaps.
+function lodgeExtraMetrics(l, year, months){
+  if(year === '2026'){
+    const lm = LODGE_MONTHLY[l.name];
+    if(!lm || !lm.grossTotalRevA) return { grossTotalA:null, grossTotalB:null, extrasA:null, extrasB:null };
+    let grossTotalA=0, grossTotalB=0, extrasA=0, extrasB=0;
+    months.forEach(i=>{
+      grossTotalA += lm.grossTotalRevA[i]; grossTotalB += lm.grossTotalRevB[i];
+      extrasA += lm.extrasRevA[i]; extrasB += lm.extrasRevB[i];
+    });
+    return { grossTotalA, grossTotalB, extrasA, extrasB };
+  }
+  if(l && l.grossTotalRevA){
+    let grossTotalA=0, extrasA=0;
+    months.forEach(i=>{
+      grossTotalA += l.grossTotalRevA[i]; extrasA += l.extrasRevA[i];
+    });
+    return { grossTotalA, grossTotalB:null, extrasA, extrasB:null };
+  }
+  return { grossTotalA:null, grossTotalB:null, extrasA:null, extrasB:null };
+}
+
+// Resolves the "current scope" metrics — either the country-level periodMetrics() (Property
+// filter = All Properties) or a single lodge's period-aware metrics reshaped into the same
+// {grrA, budgRev, adrA, ...} shape, so metricVal() and every KPI/chart consumer work unchanged
+// regardless of whether the dashboard is scoped to a country or a single property.
+function scopedMetrics(year, months){
+  if(state.property === 'ALL') return periodMetrics(year, state.country, months);
+  const lodge = findLodge(state.property, year);
+  if(!lodge) return periodMetrics(year, state.country, months);
+  const isAF = year === '2026';
+  const p = lodgePeriod(lodge, months, isAF, year);
+  const ex = lodgeExtraMetrics(lodge, year, months);
+  return {
+    grrA: p.revA, budgRev: p.revB, adrA: p.adr, budgARR: p.budgARR, occA: p.occ, budgOcc: p.budgOcc,
+    budgRN: p.budgRN, ebA: p.eb, ebB: p.ebB,
+    grossTotalA: ex.grossTotalA, grossTotalB: ex.grossTotalB, extrasA: ex.extrasA, extrasB: ex.extrasB,
+    roomsAvail: p.roomsAvail,
+    confOcc: p.confOcc, confARR: p.confARR, confRev: p.confRev, confRN: p.confRN,
+    provRev: p.provRev, closed: p.closed
+  };
+}
+
+// ---------- KPI Row ----------
+function renderKPIs(){
+  const y = state.year, months = effectiveMonths();
+  const pm = scopedMetrics(y, months);
+  const pmPrior = y==='2026' ? scopedMetrics('2025', months) : null;
+
+  // EBITDA, Extras Revenue and Total Gross Revenue have no Confirmed-only figure anywhere in the
+  // source data (see metricVal()) — rather than show three "—" cards, Confirmed view drops them
+  // from the KPI row entirely. RevPAR stays (it IS computable Confirmed-only, from Confirmed
+  // Room Revenue ÷ Rooms Available). This only applies to 2026 — 2025 is a closed year where the
+  // View toggle has no effect, so its EBITDA card should keep showing real data even if the
+  // toggle happens to be left on "Confirmed".
+  const confirmedActive = y==='2026' && state.view==='confirmed';
+  // Provisional Room Revenue is the mirror image of the three above: it only makes sense to show
+  // "how much is still unconfirmed" while looking at Confirmed-only figures, not on the A+F card
+  // row (which already blends provisional-and-beyond into the headline number) — so it's dropped
+  // in A+F view and shown only in Confirmed view, at the user's explicit request.
+  const order = ['rns','occ','adr','revenue','provRev','revpar','extras','grossTotal','ebitda']
+    .filter(key => !(confirmedActive && (key==='extras' || key==='grossTotal' || key==='ebitda')))
+    .filter(key => !(key==='provRev' && !confirmedActive));
+  const cards = order.map(key => {
+    const cfg = METRIC_CONFIG[key];
+    const isPoints = (key==='occ');
+    const actualA = metricVal(pm, key, 'actual');
+    const budgetB = metricVal(pm, key, 'budget');
+    const priorP = pmPrior ? metricVal(pmPrior, key, 'actual') : null;
+    const hasBudget = actualA!==null && actualA!==undefined && budgetB!==null && budgetB!==undefined;
+    // Provisional Room Revenue has no Budget line anywhere in the source (it isn't itself
+    // budgeted) — say so plainly rather than reusing the generic "not available for this view"
+    // wording, which implies the View toggle is the reason (it isn't, here).
+    const noBudgetText = key==='provRev' ? 'no budget line for this metric' : 'not available for this view';
+
+    const budgetChip = pctChip(actualA, budgetB, isPoints);
+    const budgetAbs = !hasBudget ? noBudgetText : isPoints ? null : (actualA-budgetB>=0?'+':'')+fmtMoneyOrNum(actualA-budgetB,cfg.fmt)+' vs '+fmtMoneyOrNum(budgetB,cfg.fmt)+' budget';
+    const budgetAbsPts = !hasBudget ? noBudgetText : isPoints ? fmtPtDiff(actualA-budgetB)+' vs '+budgetB.toFixed(1).replace(/\.0$/,'')+'% budget' : null;
+
+    let priorRow;
+    if(y==='2026'){
+      const priorChip = pctChip(actualA, priorP, isPoints);
+      const priorAbs = isPoints
+        ? (priorP!==null ? fmtPtDiff(actualA-priorP)+' vs '+priorP.toFixed(1).replace(/\.0$/,'')+'% in 2025' : 'no prior year')
+        : (priorP!==null ? (actualA-priorP>=0?'+':'')+fmtMoneyOrNum(actualA-priorP,cfg.fmt)+' vs '+fmtMoneyOrNum(priorP,cfg.fmt)+' in 2025' : 'no prior year');
+      priorRow = {label:'vs 2025', chip:priorChip, abs:priorAbs};
+    } else {
+      priorRow = {label:'vs prior year', chip:{cls:'na',text:'N/A'}, abs:'no 2024 baseline in extract'};
+    }
+
+    return {
+      label: cfg.full,
+      figure: fmtByType(actualA, cfg.fmt),
+      rows: [
+        {label:'vs Budget', chip:budgetChip, abs: isPoints?budgetAbsPts:budgetAbs},
+        priorRow
+      ]
+    };
+  });
+
+  document.getElementById('kpiRow').innerHTML = cards.map(card => `
+    <div class="card kpi-card">
+      <p class="eyebrow">${card.label}</p>
+      <p class="kpi-figure">${card.figure}</p>
+      ${card.rows.map(r => `
+        <div class="kpi-compare">
+          <div class="row1"><span class="label">${r.label}</span><span class="pct ${r.chip.cls}">${r.chip.text}</span></div>
+          <div class="abs">${r.abs}</div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+// Absolute variance figures (vs Budget / vs 2025) now use the SAME formatter as the headline KPI
+// figure (fmtByType) rather than always-full-precision fmtMoney — so a moneyBig metric's variance
+// abbreviates to $X.XXm/$Xk just like its headline does, instead of a raw "$1,234,567" next to a
+// "$17.66m" headline. moneySmall/count metrics (ADR, RevPAR, Room Nights Sold) are unaffected since
+// their values are already small enough that fmtByType and the old always-full-precision fmtMoney
+// produce the same output.
+function fmtMoneyOrNum(v, fmtType){ return fmtByType(v, fmtType); }
+
+// ---------- Trend chart (hand-built SVG) — switches by active metric ----------
+function renderChart(){
+  const y='2026', metricKey=state.metric;
+  const cfg = METRIC_CONFIG[metricKey];
+  document.getElementById('chartTitle').textContent = cfg.full + ' by month' + (state.property!=='ALL' ? ` — ${state.property}` : '');
+
+  const confirmedActive = state.view==='confirmed';
+  const actualWord = confirmedActive ? 'Confirmed' : '2026 A+F';
+  const legendLabel = document.getElementById('legendActualLabel');
+  if(legendLabel) legendLabel.textContent = confirmedActive ? 'Confirmed' : '2026 A+F';
+  const mdLegendLabel = document.getElementById('mdLegendLabel');
+  if(mdLegendLabel) mdLegendLabel.textContent = confirmedActive ? 'Confirmed' : 'A+F';
+  const noConfirmedSource = confirmedActive && (metricKey==='ebitda' || metricKey==='revpar' || metricKey==='grossTotal' || metricKey==='extras');
+  document.getElementById('chartSub').textContent = noConfirmedSource
+    ? `${cfg.full} has no Confirmed-only figure in the source data — showing Budget${state.property==='ALL'?' and 2025':''} only. Switch to A+F to see the actual line.`
+    : `Navy is ${actualWord}, dashed red is budget, dashed grey is 2025 actual.`;
+
+  const actual = metricSeriesScoped(y, metricKey, 'actual');
+  const budget = metricSeriesScoped(y, metricKey, 'budget');
+  // No 2025 monthly detail exists at the property level (MIS workbook is 2026-only), so the
+  // prior-year line is simply omitted when a single property is selected.
+  const prior  = state.property==='ALL' ? metricSeries('2025', state.country, metricKey, 'actual') : MONTHS.map(()=>null);
+
+  const svg = document.getElementById('trendChart');
+  const W=760,H=220, padL=54, padR=14, padT=14, padB=26;
+  const plotW = W-padL-padR, plotH = H-padT-padB;
+  const allVals = [...actual, ...budget, ...prior].filter(v=>v!=null);
+  let maxV = Math.max(...allVals) * 1.1;
+  let minV = Math.min(0, Math.min(...allVals));
+  if(metricKey==='occ'){ maxV = 100; minV = 0; }
+  const x = i => padL + (i/(MONTHS.length-1))*plotW;
+  const yScale = v => padT + plotH - ((v-minV)/(maxV-minV))*plotH;
+
+  function pathFor(arr){
+    let d = '', started=false;
+    arr.forEach((v,i)=>{
+      if(v==null) return;
+      d += (started?'L':'M') + x(i).toFixed(1) + ',' + yScale(v).toFixed(1) + ' ';
+      started = true;
+    });
+    return d;
+  }
+
+  let gridSvg = '';
+  const gridSteps = 4;
+  for(let g=0; g<=gridSteps; g++){
+    const v = minV + ((maxV-minV)/gridSteps)*g;
+    const gy = yScale(v);
+    gridSvg += `<line x1="${padL}" y1="${gy}" x2="${W-padR}" y2="${gy}" stroke="#EDEAE1" stroke-width="1"/>`;
+    gridSvg += `<text x="${padL-8}" y="${gy+3}" font-size="9" fill="#9C988B" text-anchor="end" font-family="Public Sans">${fmtByType(v,cfg.fmt)}</text>`;
+  }
+  const monthLabels = MONTHS.map((m,i)=> `<text x="${x(i)}" y="${H-8}" font-size="9" fill="#9C988B" text-anchor="middle" font-family="Public Sans">${m}</text>`).join('');
+
+  // Highlight the months included in the active Period selection (unless it's the full year)
+  const bandW = plotW/12;
+  const periodBands = isFullYear(state.selectedMonths) ? '' : state.selectedMonths.map(i =>
+    `<rect x="${(x(i)-bandW/2).toFixed(1)}" y="${padT}" width="${bandW.toFixed(1)}" height="${plotH}" fill="#16305C" opacity="0.06"/>`
+  ).join('');
+
+  const priorPath = prior.some(v=>v!=null) ? `<path d="${pathFor(prior)}" fill="none" stroke="#9AA5B4" stroke-width="2" stroke-dasharray="4,3"/>` : '';
+  const budgetPath = `<path d="${pathFor(budget)}" fill="none" stroke="#C41E3A" stroke-width="2" stroke-dasharray="4,3"/>`;
+  const actualPath = `<path d="${pathFor(actual)}" fill="none" stroke="#16305C" stroke-width="2.5"/>`;
+
+  const markers = actual.map((v,i)=> v==null ? '' : `<circle class="marker" data-i="${i}" cx="${x(i)}" cy="${yScale(v)}" r="8" fill="transparent"/><circle cx="${x(i)}" cy="${yScale(v)}" r="3.5" fill="#16305C" stroke="#fff" stroke-width="1.5" pointer-events="none"/>`).join('');
+
+  svg.innerHTML = periodBands + gridSvg + monthLabels + priorPath + budgetPath + actualPath + markers +
+    `<line id="hoverLine" x1="0" y1="${padT}" x2="0" y2="${H-padB}" stroke="#16305C" stroke-width="1" stroke-dasharray="2,2" opacity="0" pointer-events="none"/>`;
+
+  svg.querySelectorAll('.marker').forEach(m => {
+    m.addEventListener('mouseenter', () => showReadout(parseInt(m.dataset.i)));
+  });
+  svg.addEventListener('mouseleave', () => showReadout(lastMonthWithData(actual)));
+
+  // default readout = last month with actual data
+  showReadout(lastMonthWithData(actual));
+}
+
+function lastMonthWithData(arr){
+  for(let i=arr.length-1;i>=0;i--){ if(arr[i]!=null) return i; }
+  return 11;
+}
+
+function showReadout(i){
+  const y='2026', metricKey=state.metric;
+  const cfg = METRIC_CONFIG[metricKey];
+  const mm = monthMetricsScoped(y, i);
+  const mmPrior = state.property==='ALL' ? getMonthMetrics('2025', state.country, i) : null;
+  const act = metricVal(mm, metricKey, 'actual');
+  const bud = metricVal(mm, metricKey, 'budget');
+  const pri = mmPrior ? metricVal(mmPrior, metricKey, 'actual') : null;
+  const isPts = metricKey==='occ';
+  const budChip = pctChip(act, bud, isPts);
+  const priChip = pctChip(act, pri, isPts);
+
+  const hl = document.getElementById('hoverLine');
+  if(hl){
+    const W=760, padL=54, padR=14;
+    const plotW = W-padL-padR;
+    const xPos = padL + (i/(MONTHS.length-1))*plotW;
+    hl.setAttribute('x1', xPos); hl.setAttribute('x2', xPos); hl.setAttribute('opacity','1');
+  }
+
+  document.getElementById('readout').innerHTML = `
+    <span class="rmonth">${MONTHS[i]} 2026</span>
+    <span class="ritem"><span class="swatch" style="background:#16305C;"></span>${state.view==='confirmed'?'Confirmed':'A+F'} <b>${fmtByType(act,cfg.fmt)}</b></span>
+    <span class="ritem"><span class="swatch" style="background:#C41E3A;"></span>Budget <b>${fmtByType(bud,cfg.fmt)}</b> <span class="delta ${budChip.cls==='pos'?'pct pos':'pct neg'}">(${budChip.text})</span></span>
+    ${pri!=null ? `<span class="ritem"><span class="swatch" style="background:#9AA5B4;"></span>2025 <b>${fmtByType(pri,cfg.fmt)}</b> <span class="delta ${priChip.cls==='pos'?'pct pos':'pct neg'}">(${priChip.text})</span></span>` : ''}
+  `;
+}
+
+// ---------- Monthly Detail (grouped tri-bars, clickable) ----------
+function renderMonthlyDetail(){
+  const y='2026', metricKey=state.metric;
+  const cfg = METRIC_CONFIG[metricKey];
+  const actual = metricSeriesScoped(y, metricKey, 'actual');
+  const budget = metricSeriesScoped(y, metricKey, 'budget');
+  const prior  = state.property==='ALL' ? metricSeries('2025', state.country, metricKey, 'actual') : MONTHS.map(()=>null);
+  const maxV = Math.max(...actual.filter(v=>v!=null), ...budget.filter(v=>v!=null), ...prior.filter(v=>v!=null)) * 1.05 || 1;
+
+  document.getElementById('monthlyDetail').innerHTML = MONTHS.map((m,i)=>{
+    const a=actual[i], b=budget[i], p=prior[i];
+    const hA = a!=null ? Math.max(2,(a/maxV)*40) : 0;
+    const hB = b!=null ? Math.max(2,(b/maxV)*40) : 0;
+    const hP = p!=null ? Math.max(2,(p/maxV)*40) : 0;
+    const chip = pctChip(a, b, metricKey==='occ');
+    return `<div class="md-col ${i===state.month?'active':''} ${state.selectedMonths.includes(i)?'in-period':''}" data-i="${i}">
+      <div class="md-bars">
+        <div class="md-bar actual" style="height:${hA}px;"></div>
+        <div class="md-bar budget" style="height:${hB}px;"></div>
+        ${p!=null ? `<div class="md-bar prior" style="height:${hP}px;"></div>` : ''}
+      </div>
+      <div class="md-month">${m}</div>
+      <div class="md-value">${fmtByType(a,cfg.fmt)}</div>
+      <div class="md-var ${chip.cls==='pos'?'pct pos':'pct neg'}">${chip.text}</div>
+    </div>`;
+  }).join('');
+
+  document.querySelectorAll('#monthlyDetail .md-col').forEach(col => {
+    col.addEventListener('click', () => {
+      state.month = parseInt(col.dataset.i);
+      renderMonthPills();
+      renderMonthFocus();
+      renderMonthlyDetail();
+      document.querySelector('.monthfocus').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+}
+
+// ---------- Metric tabs ----------
+function renderMetricTabs(){
+  // EBITDA has no Confirmed-only figure anywhere in the source — hide its chart tab in Confirmed
+  // view (2026 only; 2025's View toggle is a no-op) rather than let it draw an all-"—" chart. If
+  // EBITDA happened to be the active tab when the toggle flips, fall back to Revenue.
+  const confirmedActive = state.year==='2026' && state.view==='confirmed';
+  if(confirmedActive && state.metric==='ebitda') state.metric = 'revenue';
+  document.querySelectorAll('#metricTabs button').forEach(btn => {
+    const isEbitda = btn.dataset.metric==='ebitda';
+    btn.style.display = (confirmedActive && isEbitda) ? 'none' : '';
+    btn.classList.toggle('active', btn.dataset.metric === state.metric);
+    btn.onclick = () => { state.metric = btn.dataset.metric; renderMetricTabs(); renderChart(); renderMonthlyDetail(); };
+  });
+}
+
+// ---------- Performance by Property (full table) ----------
+function renderPropertyTable(){
+  const y = state.year, c = state.country, months = effectiveMonths();
+  const showKE = c==='ALL' || c==='KE';
+  const showTZ = c==='ALL' || c==='TZ';
+  const isAF = y==='2026';
+  const fy = isFullYear(months) || y!=='2026';
+
+  // Confirmed view swaps the headline Revenue/Occ/ADR/RNS for their Confirmed-only equivalents
+  // (null — "not available" — for a partial period, since no per-lodge monthly Confirmed split
+  // exists) and blanks EBITDA/Extras/Gross Total Revenue entirely, since none of the three has a
+  // Confirmed-only figure anywhere in the source. `p.closed` (2025) bypasses this — a closed year
+  // has nothing left to be "confirmed" beyond its own Actual.
+  function applyView(p){
+    const confirmedMode = state.view==='confirmed' && !p.closed;
+    return {
+      revA: confirmedMode ? (p.confRev ?? null) : p.revA,
+      occ: confirmedMode ? (p.confOcc ?? null) : p.occ,
+      adr: confirmedMode ? (p.confARR ?? null) : p.adr,
+      rnsVal: confirmedMode ? (p.confRN ?? null) : p.rnsVal,
+      eb: confirmedMode ? null : p.eb,
+      confirmedMode
+    };
+  }
+
+  // The Performance by Property table always lists every lodge (it's the per-property
+  // breakdown by definition) — the Property filter highlights the selected row here rather
+  // than hiding the others, since the filter's job elsewhere is to narrow aggregate views.
+  function lodgeRow(l){
+    const p = lodgePeriod(l, months, isAF, y);
+    const ex = lodgeExtraMetrics(l, y, months);
+    const v = applyView(p);
+    // p.revB is genuinely null (not just zero) for a partial-period 2025 lodge view — neither 2025
+    // source workbook has a monthly Budget breakdown per lodge — so deltaPct must stay null too
+    // rather than defaulting to 0, which would render as a misleading "on budget" +0.0%.
+    const deltaPct = (v.revA!=null && p.revB!=null) ? ((v.revA-p.revB)/Math.abs(p.revB))*100 : null;
+    return { name:l.name, revA:v.revA, revB:p.revB, deltaPct, occ:v.occ, adr:v.adr, rnsVal:v.rnsVal, eb:v.eb,
+      extras: v.confirmedMode?null:ex.extrasA, grossTotal: v.confirmedMode?null:ex.grossTotalA, selected: state.property===l.name };
+  }
+  // Totals rows always come from the trusted country-level monthly data (periodMetrics), NOT
+  // from summing the lodge rows above them. This matters specifically for EBITDA: summing the
+  // individual lodges' EBITDA produces a materially different (~$3.9M higher) figure than the
+  // Weekly Leadership Dashboard sheet's own stated Kenya/Group EBITDA totals — a discrepancy
+  // found earlier, where the decision was explicitly made to keep the sheet's stated total.
+  // periodMetrics() draws on that same trusted sheet data (generalized to any period), so this
+  // preserves that decision at Full Year and extends it consistently to partial periods too.
+  // Tanzania has exactly one lodge (Tarangire) — its "totals" row and the Tarangire row above
+  // it are really the same property, just pulled from two different spreadsheets for partial
+  // periods (Tarangire's row from the MIS workbook, the country total from the Weekly Leadership
+  // Dashboard sheet), which produced a small, confusing mismatch between two rows that should be
+  // identical. Route Tanzania's totals through the same MIS-sourced lodge data as the Tarangire
+  // row so the two always agree exactly — at the user's request, MIS is authoritative here.
+  function totalsRow(name, country){
+    if(country === 'TZ'){
+      const lodge = findLodge('Tarangire Sopa Lodge', y);
+      const p = lodgePeriod(lodge, months, isAF, y);
+      const ex = lodgeExtraMetrics(lodge, y, months);
+      const v = applyView(p);
+      const deltaPct = (v.revA!=null && p.revB!=null) ? ((v.revA-p.revB)/Math.abs(p.revB))*100 : null;
+      return { totals:true, name, revA:v.revA, revB:p.revB, deltaPct, occ:v.occ, adr:v.adr, rnsVal:v.rnsVal, eb:v.eb,
+        extras: v.confirmedMode?null:ex.extrasA, grossTotal: v.confirmedMode?null:ex.grossTotalA };
+    }
+    const pmC = periodMetrics(y, country, months);
+    const revA = metricVal(pmC,'revenue','actual'), revB = pmC.budgRev, eb = metricVal(pmC,'ebitda','actual');
+    const deltaPct = (revA!=null && revB) ? ((revA-revB)/Math.abs(revB))*100 : null;
+    const confirmedMode = state.view==='confirmed' && !pmC.closed;
+    return { totals:true, name, revA, revB, deltaPct, occ:metricVal(pmC,'occ','actual'), adr:metricVal(pmC,'adr','actual'), rnsVal:metricVal(pmC,'rns','actual'), eb,
+      extras: confirmedMode?null:pmC.extrasA, grossTotal: confirmedMode?null:pmC.grossTotalA };
+  }
+
+  let rows = [];
+  if(showKE){
+    rows.push(...DATA[y].KE.lodges.map(lodgeRow));
+    rows.push(totalsRow('Totals (Kenya)', 'KE'));
+  }
+  if(showTZ){
+    rows.push(...DATA[y].TZ.lodges.map(lodgeRow));
+    rows.push(totalsRow('Totals (Tanzania)', 'TZ'));
+  }
+  if(c==='ALL'){
+    rows.push(Object.assign(totalsRow('Sopa Group Total', 'ALL'), {group:true}));
+  }
+
+  // EBITDA, Extras Rev and Gross Total Rev have no Confirmed-only figure anywhere in the source —
+  // drop all three columns in Confirmed view rather than fill the table with "—" cells.
+  const confirmedActive = isAF && state.view==='confirmed';
+  const head = `<tr><th>Property</th><th>Revenue</th><th>Budget</th><th>Δ Bud</th><th>Occ</th><th>ADR</th><th>RNS</th>${confirmedActive?'':'<th>EBITDA</th><th>Extras Rev</th><th>Gross Total Rev</th>'}</tr>`;
+  const body = rows.map(r => `
+    <tr class="${r.totals?'totals':''} ${r.selected?'row-selected':''}">
+      <td class="metric-name">${r.name}</td>
+      <td>${fmtMoney(r.revA)}</td>
+      <td>${fmtMoney(r.revB)}</td>
+      <td><span class="chip ${r.deltaPct==null?'na':(r.deltaPct>=0?'pos':'neg')}">${fmtPct(r.deltaPct)}</span></td>
+      <td>${r.occ==null ? '—' : r.occ.toFixed(1).replace(/\.0$/,'') + '%'}</td>
+      <td>${fmtMoney(r.adr)}</td>
+      <td>${fmtNum(r.rnsVal)}</td>
+      ${confirmedActive ? '' : `<td>${fmtMoney(r.eb)}</td><td>${fmtMoney(r.extras)}</td><td>${fmtMoney(r.grossTotal)}</td>`}
+    </tr>`).join('');
+  document.getElementById('propertyTable').innerHTML = head + body;
+  document.getElementById('propSub').textContent = (isAF
+    ? `${periodLabel(months)} 2026 ${confirmedActive ? 'confirmed bookings' : 'actual + forecast'} against budget`
+    : (isFullYear(months)
+        ? 'Full Year 2025 actual against budget'
+        : `${periodLabel(months)} 2025 actual (Budget not available per-lodge for partial periods)`)
+    ) + (state.property!=='ALL' ? ` · ${state.property} highlighted` : '');
+  const misNote = document.getElementById('misNote');
+  if(misNote){
+    if(confirmedActive){
+      misNote.textContent = "Confirmed view: Revenue/Occ/ADR/RNS above show only already-confirmed reservations (excluding Budget and still-provisional bookings). EBITDA, Extras Revenue and Total Gross Revenue have no Confirmed-only figure in the source data, so they're hidden here — switch to A+F to see them.";
+      misNote.style.display = 'block';
+    } else if(y==='2026' && !isFullYear(months)){
+      misNote.textContent = "Figures for this period are sourced from the Sopa Kenya 2026 MIS workbook's monthly detail and may differ slightly from full-year totals due to timing differences between source sheets.";
+      misNote.style.display = 'block';
+    } else if(y==='2025' && !isFullYear(months)){
+      misNote.textContent = "Figures for this period are sourced from the Sopa Kenya 2025 MIS and TSL MIS 2025 workbooks' monthly detail (Actual only — neither source has a monthly Budget breakdown per lodge, so Budget/Δ Bud show as — for individual lodge rows and Totals (Tanzania) in a partial period; Totals (Kenya) still shows real Budget since that comes from the country-level sheet, not the lodge-level MIS).";
+      misNote.style.display = 'block';
+    } else {
+      misNote.style.display = 'none';
+    }
+  }
+}
+
+// ---------- Leaderboard — ranked by Gross Room Revenue variance to budget ----------
+function renderLeaderboard(){
+  const y = state.year, c = state.country, months = effectiveMonths();
+  const isAF = y==='2026';
+  let lodges = [];
+  if(c==='ALL'){ lodges = [...DATA[y].KE.lodges, ...DATA[y].TZ.lodges]; }
+  else { lodges = DATA[y][c].lodges; }
+
+  // Confirmed view ranks by Confirmed-only revenue variance instead — null (not fmtMoney(0)) for
+  // a partial period, since no per-lodge monthly Confirmed split exists; `p.closed` (2025)
+  // bypasses this, same as everywhere else the View toggle is threaded through.
+  const ranked = lodges.map(l => {
+    const p = lodgePeriod(l, months, isAF, y);
+    const confirmedMode = state.view==='confirmed' && !p.closed;
+    const revA = confirmedMode ? (p.confRev ?? null) : p.revA;
+    const diff = (revA!=null && p.revB!=null) ? revA - p.revB : null;
+    const pct = diff==null ? null : (p.revB ? (diff/Math.abs(p.revB))*100 : 0);
+    return {name:l.name, revA, revB:p.revB, diff, pct};
+  }).sort((a,b) => (b.pct ?? -Infinity) - (a.pct ?? -Infinity));
+
+  const sub = document.getElementById('lbSub');
+  if(sub) sub.textContent = 'Ranked by ' + (state.view==='confirmed' && isAF ? 'confirmed revenue' : 'gross room revenue') + ' variance to budget';
+
+  // Property filter highlights the selected lodge here rather than hiding the rest — a
+  // leaderboard with one row would defeat the point of ranking.
+  document.getElementById('leaderboard').innerHTML = ranked.map((r,idx) => `
+    <div class="lb-row ${state.property===r.name?'lb-selected':''}">
+      <div class="lb-line1"><span><span class="lb-rank">${idx+1}</span><span class="lb-name">${r.name}</span></span><span class="lb-value">${fmtMoney(r.revA)}</span></div>
+      <div class="lb-line2"><span class="chip ${r.pct==null?'na':(r.pct>=0?'pos':'neg')}">${r.pct==null ? 'not available for this period' : fmtPct(r.pct) + ' · ' + (r.diff>=0?'+':'')+fmtMoney(r.diff)}</span></div>
+    </div>
+  `).join('');
+}
+
+// ---------- Country split — Revenue / RNS / EBITDA (actual) ----------
+function renderSplits(){
+  const y = state.year, months = effectiveMonths();
+  const kePm = periodMetrics(y, 'KE', months);
+  const tzPm = periodMetrics(y, 'TZ', months);
+
+  // Gross Room Revenue routes through metricVal() so Confirmed view applies here too. EBITDA has
+  // no Confirmed-only source anywhere in the data, so its row is dropped entirely in that view
+  // rather than shown as a permanent —, same treatment as the KPI row / property table.
+  const confirmedActive = state.view==='confirmed' && y==='2026';
+  const rows = [
+    {label:'Gross Room Revenue', ke:metricVal(kePm,'revenue','actual'), tz:metricVal(tzPm,'revenue','actual'), fmt:fmtMoney},
+    {label:'Room Nights Sold', ke:metricVal(kePm,'rns','actual'), tz:metricVal(tzPm,'rns','actual'), fmt:fmtNum}
+  ];
+  if(!confirmedActive) rows.push({label:'EBITDA', ke:metricVal(kePm,'ebitda','actual'), tz:metricVal(tzPm,'ebitda','actual'), fmt:fmtMoney});
+
+  const confirmedNote = confirmedActive ? ' · Confirmed view (EBITDA hidden — no Confirmed-only figure in the source)' : '';
+  // Left unaffected by the Property filter — Kenya vs. Tanzania doesn't apply within a single lodge.
+  document.getElementById('splitSub').textContent = `${periodLabel(months)}${y==='2025'?' · 2025':''}${state.property!=='ALL'?' · Group split (not narrowed by Property filter)':''}${confirmedNote}`;
+  document.getElementById('splits').innerHTML = rows.map(r => {
+    const ke = r.ke ?? 0, tz = r.tz ?? 0;
+    const maxV = Math.max(ke, tz) || 1;
+    return `<div class="split-metric">
+      <div class="split-label">${r.label}</div>
+      <div class="split-bar-row"><span class="split-country">Kenya</span><div class="split-track"><div class="split-fill ke" style="width:${(ke/maxV)*100}%;"></div></div><span class="split-value">${r.fmt(r.ke)}</span></div>
+      <div class="split-bar-row"><span class="split-country">Tanzania</span><div class="split-track"><div class="split-fill tz" style="width:${(tz/maxV)*100}%;"></div></div><span class="split-value">${r.fmt(r.tz)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ---------- Month Focus ----------
+function renderMonthPills(){
+  document.getElementById('monthPills').innerHTML = MONTHS.map((m,i) => `<button data-i="${i}" class="${i===state.month?'active':''}">${m}</button>`).join('');
+  document.querySelectorAll('#monthPills button').forEach(btn => {
+    btn.addEventListener('click', () => { state.month = parseInt(btn.dataset.i); renderMonthlyDetail(); renderMonthFocus(); renderMonthPills(); });
+  });
+}
+
+function renderMonthFocus(){
+  const y = state.year, i = state.month;
+  const cur = y==='2026' ? monthMetricsScoped(y, i) : getMonthMetrics(y, state.country, i);
+
+  // Routed through metricVal() so Confirmed view applies here too — EBITDA has no Confirmed-only
+  // figure anywhere in the source, so it correctly shows — in that view (via the null fmt guard
+  // below); Occupancy/ADR/Room Revenue/RNS switch to their Confirmed-only equivalents.
+  const occA = metricVal(cur,'occ','actual'), adrA = metricVal(cur,'adr','actual'),
+    grrA = metricVal(cur,'revenue','actual'), ebA = metricVal(cur,'ebitda','actual'), rnA = metricVal(cur,'rns','actual');
+  const adrB = cur.budgARR, occB = cur.budgOcc, grrB = cur.budgRev, ebB = cur.ebB, rnB = cur.budgRN;
+
+  let prior = null;
+  if(y==='2026' && state.property==='ALL'){
+    const p = getMonthMetrics('2025', state.country, i);
+    prior = { occ: p.occA, adr: p.adrA, grr: p.grrA, ebitda: p.ebA };
+    prior.rn = rns(prior.grr, prior.adr);
+  }
+
+  const confirmedActive = state.view==='confirmed' && y==='2026';
+  const actualLabel = confirmedActive ? 'Confirmed' : 'Actual';
+  // EBITDA has no Confirmed-only figure anywhere in the source — its row is dropped in Confirmed
+  // view rather than shown as a permanent —, same treatment as everywhere else on the dashboard.
+  const metrics = [
+    {name:'Occupancy', actual:occA, budget:occB, fmt:v=>v==null?'—':v.toFixed(0)+'%', isPoints:true, prior: prior?prior.occ:null},
+    {name:'ADR', actual:adrA, budget:adrB, fmt:fmtMoney, isPoints:false, prior: prior?prior.adr:null},
+    {name:'Room Revenue', actual:grrA, budget:grrB, fmt:fmtMoney, isPoints:false, prior: prior?prior.grr:null},
+    ...(confirmedActive ? [] : [{name:'EBITDA', actual:ebA, budget:ebB, fmt:fmtMoney, isPoints:false, prior: prior?prior.ebitda:null}]),
+    {name:'Room Nights (RNS)', actual:rnA, budget:rnB, fmt:fmtNum, isPoints:false, prior: prior?prior.rn:null}
+  ];
+
+  const hasYoy = y==='2026' && state.property==='ALL';
+  let head = `<tr><th>Metric</th><th>${actualLabel}</th><th>Budget</th><th>Δ vs Budget</th>${hasYoy?'<th>2025</th><th>Δ YoY</th>':''}</tr>`;
+  let rows = metrics.map(m => {
+    const dBudget = pctChip(m.actual, m.budget, m.isPoints);
+    const yoy = hasYoy ? pctChip(m.actual, m.prior, m.isPoints) : null;
+    return `<tr>
+      <td class="metric-name">${m.name}</td>
+      <td>${m.fmt(m.actual)}</td>
+      <td>${m.fmt(m.budget)}</td>
+      <td><span class="chip ${dBudget.cls}">${dBudget.text}</span></td>
+      ${hasYoy ? `<td>${m.fmt(m.prior)}</td><td><span class="chip ${yoy.cls}">${yoy.text}</span></td>` : ''}
+    </tr>`;
+  }).join('');
+  document.getElementById('mfMainTable').innerHTML = head + rows;
+
+  const bookingWrap = document.getElementById('mfBookingWrap');
+  if(y!=='2026'){
+    bookingWrap.innerHTML = `<p class="na-note">Booking-pace tracking (Budget / Confirmed / Provisional) is only available for the active 2026 reporting year in this MIS extract.</p>`;
+  } else if(state.property!=='ALL'){
+    bookingWrap.innerHTML = `<p class="na-note">Booking-pace tracking (Confirmed / Provisional) isn't broken out at the individual property level in the source data — clear the Property filter to view it.</p>`;
+  } else {
+    const conf = { occ:cur.confOcc, rn:cur.confRN, rev:cur.confRev, arr:cur.confARR };
+    const prov = { occ:cur.provOcc||0, rn:cur.provRN||0, rev:cur.provRev||0 };
+    const totalOcc = (conf.occ||0) + (prov.occ||0);
+    const totalRN = conf.rn + prov.rn;
+    const totalRev = conf.rev + prov.rev;
+    const totalARR = totalRN ? Math.round(totalRev/totalRN) : conf.arr;
+
+    const rowsBooking = [
+      {name:'Occupancy', budget:cur.budgOcc, conf:conf.occ, prov:prov.occ, total:totalOcc, fmt:v=>v.toFixed(0)+'%'},
+      {name:'Room Nights', budget:cur.budgRN, conf:conf.rn, prov:prov.rn, total:totalRN, fmt:fmtNum},
+      {name:'Room Revenue', budget:cur.budgRev, conf:conf.rev, prov:prov.rev, total:totalRev, fmt:fmtMoney},
+      {name:'ARR', budget:cur.budgARR, conf:conf.arr, prov:prov.arr, total:totalARR, fmt:fmtMoney}
+    ];
+    let t = '<table><tr><th>Metric</th><th>Budget</th><th>Confirmed</th><th>Provisional</th><th>Total</th><th>Δ</th></tr>';
+    t += rowsBooking.map(r => {
+      const delta = pctChip(r.total, r.budget, r.name==='Occupancy');
+      return `<tr>
+        <td class="metric-name">${r.name}</td>
+        <td>${r.fmt(r.budget)}</td>
+        <td>${r.fmt(r.conf)}</td>
+        <td>${r.fmt(r.prov)}</td>
+        <td>${r.fmt(r.total)}</td>
+        <td><span class="chip ${delta.cls}">${delta.text}</span></td>
+      </tr>`;
+    }).join('');
+    t += '</table>';
+    bookingWrap.innerHTML = t;
+  }
+}
+
+// ---------- Toggles ----------
+function renderToggles(){
+  document.querySelectorAll('#yearToggle button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === state.year);
+    btn.classList.toggle('inactive', btn.dataset.val !== state.year);
+    btn.onclick = () => { state.year = btn.dataset.val; renderAll(); };
+  });
+  document.querySelectorAll('#countryToggle button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === state.country);
+    btn.classList.toggle('inactive', btn.dataset.val !== state.country);
+    btn.onclick = () => {
+      state.country = btn.dataset.val;
+      // If the newly-chosen country no longer contains the selected property, clear it —
+      // keeps the Property filter and Country toggle from disagreeing with each other.
+      if(state.property!=='ALL' && state.country!=='ALL' && LODGE_COUNTRY[state.property]!==state.country){
+        state.property = 'ALL';
+      }
+      renderAll();
+    };
+  });
+  // View toggle (A+F / Confirmed) — see the big comment on metricVal() for what this changes and
+  // what it deliberately leaves unavailable (EBITDA, RevPAR, Extras Revenue, Total Gross Revenue).
+  // Has no effect on 2025 (a closed year, see `closed` flag) — left enabled anyway rather than
+  // disabled, since flipping it while on 2025 is harmless, just a no-op.
+  document.querySelectorAll('#viewToggle button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === state.view);
+    btn.classList.toggle('inactive', btn.dataset.val !== state.view);
+    btn.onclick = () => { state.view = btn.dataset.val; renderAll(); };
+  });
+  const countryLabel = state.country==='ALL' ? 'Kenya and Tanzania' : (state.country==='KE' ? 'Kenya' : 'Tanzania');
+  const confirmedActive = state.year==='2026' && state.view==='confirmed';
+  const yearClause = state.year==='2026'
+    ? `2026 ${confirmedActive ? 'confirmed bookings' : 'actual + forecast'}, against budget and 2025`
+    : '2025 actual, against budget';
+  const propClause = state.property!=='ALL' ? ` · ${state.property}` : '';
+  document.getElementById('scopeLine').textContent = `Sopa Lodges · ${countryLabel}${propClause} · ${yearClause}`;
+}
+
+// ---------- Period selector ----------
+function applyPeriodChange(newMonths){
+  state.selectedMonths = newMonths;
+  renderPeriodSelector();
+  renderKPIs();
+  renderPropertyTable();
+  renderChart();
+  renderMonthlyDetail();
+  renderLeaderboard();
+  renderSplits();
+}
+
+function renderPeriodSelector(){
+  const toggle = document.getElementById('periodToggle');
+  toggle.textContent = periodLabel(state.selectedMonths);
+
+  const sorted = [...state.selectedMonths].sort((a,b)=>a-b);
+  const isYTD = sorted.length===YTD_MONTHS.length && sorted.every((m,i)=>m===YTD_MONTHS[i]);
+  document.querySelectorAll('#periodQuick button').forEach(btn => {
+    const isFull = btn.dataset.quick==='full';
+    btn.classList.toggle('active', isFull ? isFullYear(sorted) : isYTD);
+  });
+
+  document.getElementById('monthGrid').innerHTML = MONTHS.map((m,i) =>
+    `<button class="month-chip ${state.selectedMonths.includes(i)?'selected':''}" data-i="${i}">${m}</button>`
+  ).join('');
+
+  document.querySelectorAll('#monthGrid .month-chip').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const i = parseInt(btn.dataset.i);
+      let next = state.selectedMonths.includes(i)
+        ? state.selectedMonths.filter(m => m!==i)
+        : [...state.selectedMonths, i];
+      if(next.length===0) next = [i]; // never allow an empty selection
+      applyPeriodChange(next);
+      document.getElementById('periodPanel').style.display = 'block'; // keep panel open across re-render
+    };
+  });
+}
+
+function initPeriodSelector(){
+  document.querySelectorAll('#periodQuick button').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      applyPeriodChange(btn.dataset.quick==='ytd' ? [...YTD_MONTHS] : [0,1,2,3,4,5,6,7,8,9,10,11]);
+      document.getElementById('periodPanel').style.display = 'block';
+    };
+  });
+  document.getElementById('periodToggle').onclick = (e) => {
+    e.stopPropagation();
+    togglePanel('periodPanel', 'periodToggle');
+  };
+  document.getElementById('periodDone').onclick = (e) => { e.stopPropagation(); closePanel('periodPanel','periodToggle'); };
+}
+
+// ---------- Property filter (single lodge, or All Properties) ----------
+function applyPropertyChange(newProperty){
+  state.property = newProperty;
+  // Selecting a lodge syncs the Country toggle to match it, so the two filters never disagree;
+  // clearing the property (back to All) leaves Country exactly as the user last set it.
+  if(newProperty !== 'ALL') state.country = LODGE_COUNTRY[newProperty];
+  renderAll();
+  closePanel('propertyPanel','propertyToggle'); // single-select — close after choosing, unlike the month picker
+}
+
+function renderPropertyFilter(){
+  document.getElementById('propertyToggle').textContent = state.property==='ALL' ? 'All Properties' : state.property;
+
+  const groups = [
+    {label:'Kenya', items: PROPERTY_LIST.filter(n => LODGE_COUNTRY[n]==='KE')},
+    {label:'Tanzania', items: PROPERTY_LIST.filter(n => LODGE_COUNTRY[n]==='TZ')}
+  ];
+  let html = `<button class="${state.property==='ALL'?'selected':''}" data-name="ALL">All Properties</button>`;
+  groups.forEach(g => {
+    html += `<div class="plist-country">${g.label}</div>`;
+    g.items.forEach(name => { html += `<button class="${state.property===name?'selected':''}" data-name="${name}">${name}</button>`; });
+  });
+  document.getElementById('propertyList').innerHTML = html;
+
+  document.querySelectorAll('#propertyList button').forEach(btn => {
+    btn.onclick = (e) => { e.stopPropagation(); applyPropertyChange(btn.dataset.name); };
+  });
+}
+
+function initPropertyFilter(){
+  document.getElementById('propertyToggle').onclick = (e) => {
+    e.stopPropagation();
+    togglePanel('propertyPanel', 'propertyToggle');
+  };
+}
+
+// Shared helpers for the header's dropdown controls (Period, Property)
+function togglePanel(panelId, toggleId){
+  document.querySelectorAll('.dropdown-panel').forEach(p => { if(p.id!==panelId) p.style.display='none'; });
+  document.querySelectorAll('.dropdown-toggle').forEach(t => { if(t.id!==toggleId) t.classList.remove('open'); });
+  const panel = document.getElementById(panelId);
+  const open = panel.style.display !== 'block';
+  panel.style.display = open ? 'block' : 'none';
+  document.getElementById(toggleId).classList.toggle('open', open);
+}
+function closePanel(panelId, toggleId){
+  document.getElementById(panelId).style.display = 'none';
+  document.getElementById(toggleId).classList.remove('open');
+}
+function initDropdowns(){
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('.dropdown-wrap').forEach(wrap => {
+      if(!wrap.contains(e.target)){
+        const panel = wrap.querySelector('.dropdown-panel');
+        const toggle = wrap.querySelector('.dropdown-toggle');
+        if(panel) panel.style.display = 'none';
+        if(toggle) toggle.classList.remove('open');
+      }
+    });
+  });
+}
+
+// ---------- Master render ----------
+function renderAll(){
+  renderToggles();
+  renderPeriodSelector();
+  renderPropertyFilter();
+  renderKPIs();
+  renderPropertyTable();
+  renderMetricTabs();
+  renderChart();
+  renderMonthlyDetail();
+  renderLeaderboard();
+  renderSplits();
+  renderMonthPills();
+  renderMonthFocus();
+}
+
+initPeriodSelector();
+initPropertyFilter();
+initDropdowns();
+
+renderAll();
+</script>
+</body>
+</html>
